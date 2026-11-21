@@ -1,0 +1,17 @@
+
+# Python environment
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Private photographs and evaluation data
+data/private/
+
+# Secrets and local configuration
+.env
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
