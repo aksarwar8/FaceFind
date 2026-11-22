@@ -7,11 +7,13 @@ class FaceMatcher:
         self,
         recognition_threshold=0.50,
         possible_threshold=0.35,
-        margin_threshold=0.05,
+        margin_threshold=0.12,
+        possible_margin_threshold=0.087,
     ):
         self.recognition_threshold = recognition_threshold
         self.possible_threshold = possible_threshold
         self.margin_threshold = margin_threshold
+        self.possible_margin_threshold = possible_margin_threshold
 
     def match(self, query_embedding, gallery):
         names = gallery["names"]
@@ -63,7 +65,10 @@ class FaceMatcher:
             status = "recognised"
             identity = names[best_index]
 
-        elif best_score >= self.possible_threshold:
+        elif (
+            best_score >= self.possible_threshold
+            and margin >= self.possible_margin_threshold
+        ):
             status = "possible"
             identity = names[best_index]
 

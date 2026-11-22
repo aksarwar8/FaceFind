@@ -1,16 +1,30 @@
-
-# Python environment
+# Python virtual environments and cache files
 .venv/
+.venv_eval/
 __pycache__/
-*.py[cod]
+*.pyc
 .pytest_cache/
 
-# Private photographs and evaluation data
+# Private photographs and evaluation datasets
 data/private/
+data/benchmarks/
 
-# Secrets and local configuration
+# One-off diagnostics tied to local photographs or local evaluation data
+/scripts/debug_detector.py
+/scripts/debug_group.py
+/scripts/evaluate_image_scaling.py
+/scripts/extract_test_faces.py
+/scripts/inspect_antu.py
+/scripts/inspect_reference_gallery.py
+/scripts/test_gallery_detection.py
+/scripts/test_group_recognition.py
+/scripts/test_pipeline.py
+/scripts/test_resized_alignment.py
+
+# Local secrets and configuration; keep only the documented template
 .env
-*.log
+.env.*
+!/.env.example
 
 # OS files
 .DS_Store

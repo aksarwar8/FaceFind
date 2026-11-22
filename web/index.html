@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#090d18">
+    <title>FaceFind — Offline Face Recognition</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/app.js" defer></script>
+</head>
+<body>
+    <div class="app-shell">
+
+        <header class="topbar">
+            <a class="brand" href="/">
+                <span class="brand-icon">F</span>
+                <span>FaceFind</span>
+            </a>
+            <div class="topbar-right">
+                <span class="offline-indicator">
+                    <span class="status-dot"></span>
+                    LOCAL · OFFLINE
+                </span>
+            </div>
+        </header>
+
+        <main class="main-content">
+
+            <section class="hero">
+                <div class="eyebrow">PRIVATE FACE RECOGNITION</div>
+                <h1>Find everyone.<br><span>Know who's there.</span></h1>
+                <p>
+                    Upload your reference photographs, analyse a group
+                    photo, and identify familiar faces — entirely on your device.
+                </p>
+            </section>
+
+            <section class="status-grid">
+                <article class="stat-card">
+                    <span class="stat-label">GALLERY PEOPLE</span>
+                    <strong id="people-count">0</strong>
+                    <span class="stat-description">Reference identities</span>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">PENDING SELECTIONS</span>
+                    <strong id="pending-count">0</strong>
+                    <span class="stat-description">Faces awaiting review</span>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">ENGINE STATUS</span>
+                    <strong class="engine-status" id="engine-status">Checking</strong>
+                    <span class="stat-description">Local recognition engine</span>
+                </article>
+            </section>
+
+            <section class="workspace">
+
+                <article class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="step-label">STEP 01</span>
+                            <h2>Build your gallery</h2>
+                            <p>Upload reference photographs. Use each filename as the person's identity.</p>
+                        </div>
+                        <span class="panel-icon">01</span>
+                    </div>
+
+                    <label class="upload-zone" for="gallery-files">
+                        <span class="upload-icon">↑</span>
+                        <strong>Choose reference photographs</strong>
+                        <span>JPG, PNG, WEBP or BMP · Up to 15 MB each</span>
+                        <input id="gallery-files" type="file"
+                               accept=".jpg,.jpeg,.png,.webp,.bmp,image/jpeg,image/png,image/webp,image/bmp" multiple hidden>
+                    </label>
+
+                    <label class="button button-secondary folder-picker" for="gallery-folder">
+                        Choose reference folder
+                        <input id="gallery-folder" type="file"
+                               accept=".jpg,.jpeg,.png,.webp,.bmp,image/jpeg,image/png,image/webp,image/bmp"
+                               webkitdirectory directory multiple hidden>
+                    </label>
+
+                    <div id="gallery-file-list" class="file-list"></div>
+
+                    <button id="upload-gallery" class="button button-primary" disabled>
+                        Build reference gallery
+                    </button>
+
+                    <div id="gallery-message" class="message" role="status"></div>
+
+                    <div class="panel-divider"></div>
+
+                    <div class="section-heading">
+                        <h3>Reference identities</h3>
+                        <span id="gallery-badge" class="small-badge">EMPTY</span>
+                    </div>
+                    <div id="gallery-summary" class="empty-state">
+                        Your reference gallery is empty.
+                    </div>
+
+                    <div id="pending-section" hidden>
+                        <div class="section-heading">
+                            <h3>Manual face selection</h3>
+                            <span class="small-badge warning">REVIEW</span>
+                        </div>
+                        <div id="pending-list"></div>
+                    </div>
+
+                    <button id="clear-gallery" class="button button-secondary" disabled>
+                        Clear reference gallery
+                    </button>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="step-label">STEP 02</span>
+                            <h2>Analyse a group photo</h2>
+                            <p>Upload a photograph containing multiple people.</p>
+                        </div>
+                        <span class="panel-icon">02</span>
+                    </div>
+
+                    <label class="upload-zone group-upload" for="group-file">
+                        <span class="upload-icon">▧</span>
+                        <strong>Choose group photograph</strong>
+                        <span>Upload one image for recognition</span>
+                        <input id="group-file" type="file"
+                               accept="image/*" hidden>
+                    </label>
+
+                    <div id="group-file-name" class="file-list"></div>
+
+                    <button id="analyze-photo" class="button button-primary" disabled>
+                        Analyse group photograph
+                    </button>
+
+                    <div id="analysis-message" class="message" role="status"></div>
+
+                    <div id="results-section" hidden>
+                        <div class="panel-divider"></div>
+                        <div class="section-heading">
+                            <h3>Recognition results</h3>
+                            <span id="face-total" class="small-badge"></span>
+                        </div>
+
+                        <div class="result-stats">
+                            <div><strong id="recognized-count">0</strong><span>Recognised</span></div>
+                            <div><strong id="possible-count">0</strong><span>Possible</span></div>
+                            <div><strong id="unknown-count">0</strong><span>Unknown</span></div>
+                        </div>
+
+                        <div class="image-result">
+                            <img id="annotated-image" alt="Annotated group photograph">
+                        </div>
+
+                        <div class="result-legend">
+                            <span><i class="legend-dot green"></i> Recognised</span>
+                            <span><i class="legend-dot orange"></i> Possible</span>
+                            <span><i class="legend-dot red"></i> Unknown</span>
+                        </div>
+
+                        <div id="result-list" class="result-list"></div>
+                    </div>
+                </article>
+
+            </section>
+
+            <footer class="footer">
+                <span>FaceFind · Offline group photo recognition</span>
+                <span>All processing happens locally</span>
+            </footer>
+
+        </main>
+    </div>
+</body>
+</html>
