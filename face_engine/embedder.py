@@ -3,6 +3,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import time
 
 
 MODEL_PATH = (
@@ -37,13 +38,17 @@ class FaceEmbedder:
         )
 
         # Align the face using its five facial landmarks.
+        align_started = time.perf_counter()
         aligned_face = self.recognizer.alignCrop(
             image,
             face_row,
         )
+        alignment_ms = (time.perf_counter() - align_started) * 1000
 
         # Extract the 128-dimensional feature vector.
+        embedding_started = time.perf_counter()
         embedding = self.recognizer.feature(aligned_face)
+        embedding_ms = (time.perf_counter() - embedding_started) * 1000
 
         # Normalize the embedding.
         embedding = embedding.flatten().astype(np.float32)
@@ -52,4 +57,5 @@ class FaceEmbedder:
         if norm == 0:
             raise ValueError("Invalid zero-length face embedding")
 
+        self.last_timings_ms = {"alignment": alignment_ms, "embedding": embedding_ms}
         return embedding / norm

@@ -57,6 +57,15 @@
             <section class="workspace">
 
                 <article class="panel">
+                    <div class="pipeline-choice">
+                        <label for="pipeline-select">Recognition pipeline</label>
+                        <select id="pipeline-select">
+                            <option value="scrfd_adaface">SCRFD-10G-KPS + AdaFace IR-18 — research demo</option>
+                            <option value="yunet_sface">YuNet + SFace — fallback</option>
+                        </select>
+                        <small>SCRFD weights are restricted to non-commercial research. AdaFace checkpoint rights remain unresolved.</small>
+                        <div id="pipeline-message" class="message" role="status"></div>
+                    </div>
                     <div class="panel-heading">
                         <div>
                             <span class="step-label">STEP 01</span>

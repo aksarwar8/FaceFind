@@ -1,0 +1,9 @@
+# Optional CPU runtime for local SCRFD + AdaFace; keep OpenCV contrib from
+# requirements.txt as the sole cv2 provider. Install InsightFace separately
+# with --no-deps as documented in README.md to avoid pulling opencv-python.
+onnxruntime==1.32.0
+scikit-image==0.26.0
+onnx
+scipy
+requests
+tqdm

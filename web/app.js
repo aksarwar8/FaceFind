@@ -48,6 +48,9 @@ function updateGalleryUI(data) {
     $("pending-section").hidden = pending.length === 0;
 
     renderPending(pending);
+    if (data.active_pipeline_id && $("pipeline-select")) {
+        $("pipeline-select").value = data.active_pipeline_id;
+    }
 }
 
 async function refreshStatus() {
@@ -66,6 +69,31 @@ async function refreshStatus() {
         showMessage($("gallery-message"), error.message, "error");
     }
 }
+
+$("pipeline-select").addEventListener("change", async (event) => {
+    const select = event.target;
+    select.disabled = true;
+    showMessage($("pipeline-message"), "Loading local models...");
+    try {
+        const data = await apiRequest("/pipeline", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pipeline_id: select.value })
+        });
+        updateGalleryUI(data);
+        showMessage(
+            $("pipeline-message"),
+            `${data.active_pipeline_label} ready (${data.model_initialization_ms.toFixed(1)} ms initialization). ` +
+            (data.gallery_loaded ? "Its cached gallery is ready." : "Build a gallery for this pipeline."),
+            "success"
+        );
+    } catch (error) {
+        showMessage($("pipeline-message"), error.message, "error");
+        await refreshStatus();
+    } finally {
+        select.disabled = false;
+    }
+});
 
 
 // Reference image selection
@@ -175,7 +203,11 @@ $("upload-gallery").addEventListener("click", async () => {
             message += "\n" + data.gallery_errors.join("\n");
         }
 
-        showMessage($("gallery-message"), message, "success");
+        const rejectedBuild = data.build_succeeded === false;
+        if (data.upload_summary) {
+            message += `\nAccepted ${data.upload_summary.accepted_references}; rejected ${data.upload_summary.rejected_references}; manual selection ${data.upload_summary.manual_selection_references}.`;
+        }
+        showMessage($("gallery-message"), message, rejectedBuild ? "error" : "success");
 
         selectedGalleryFiles = [];
         $("gallery-files").value = "";
@@ -403,7 +435,9 @@ function renderResults(results) {
         information.className = "result-information";
 
         const identity = document.createElement("strong");
-        identity.textContent = result.identity || "Unknown person";
+        identity.textContent = result.conflict_with
+            ? `Unconfirmed duplicate: ${result.identity || "Unknown person"}`
+            : result.identity || "Unknown person";
 
         const details = document.createElement("small");
         details.textContent =
@@ -412,6 +446,10 @@ function renderResults(results) {
                     ? (result.best_score * 100).toFixed(1) + "%"
                     : "N/A"
             }`;
+        if (result.conflict_with) {
+            details.textContent +=
+                ` · Same identity retained for face ${result.conflict_with}`;
+        }
 
         information.append(identity, details);
 
@@ -455,3 +493,11 @@ function renderResults(results) {
 
 // Initialize dashboard
 refreshStatus();
+apiRequest("/pipeline").then(data => {
+    $("pipeline-select").value = data.active_pipeline_id;
+    showMessage(
+        $("pipeline-message"),
+        `${data.active_pipeline_label} ready (${data.model_initialization_ms.toFixed(1)} ms initialization).`,
+        "success"
+    );
+}).catch(error => showMessage($("pipeline-message"), error.message, "error"));
