@@ -1,4 +1,4 @@
-# FaceFind verification record
+# FaceFind engineering milestones
 
 For the latest counts and isolated startup and workflow checks, see the [release report](RELEASE.md) and the [assignment compliance matrix](COMPLIANCE.md). The results below describe the earlier milestones.
 
@@ -11,6 +11,16 @@ This is a sanitized record of functional checks and documentation validation. Id
 | 3 · desktop implementation | Isolated HTTP verification enrolled 50 references, decoded 50 bounded thumbnails, exercised six rejection reasons, manually confirmed a pending face, rejected stale requests and kept the working gallery after a failed replacement. Repeat group analysis returned 11 detections, one recognized and ten unknown, with no assigned identity for the unknown rows. The annotated JPEG decoded at the source dimensions and gallery embeddings were reused. Both caches restored after switching and a missing-checkpoint switch returned 503 without changing the fallback gallery. | These are HTTP observations, not browser interactions or identity-accuracy measurements. |
 | 3 · visual refinement | Static module delivery, 57 direct DOM bindings, unique IDs, Python regressions and JavaScript logic verified. CSV tests exercise formula escaping, quoting and unknown-identity suppression. | The authorized browser host was unavailable. These remained open at Milestone 3. The final release later added targeted Chrome verification. |
 | 4 · documentation | Numeric tables checked against saved outputs, custom detection counts reconciled with precision/recall/F1, model files hashed locally, and Archify generation validated. No model benchmark rerun. | The Archify viewer's automated browser gate passed. It did not exercise the FaceFind UI. |
+
+## Published development milestones
+
+| Committed milestone | Contribution | Verification and scope |
+|---|---|---|
+| 21 Nov 2026 · `8694ec4` | Initial recognition engine and project foundation. | Earliest committed implementation. The initiating prompt has not been recovered. |
+| 22–23 Nov 2026 · `aab95a7`, `9661ea9` | Offline browser application and modular recognition pipeline. | Git records the application foundation and modularization. |
+| 24 Nov 2026 · `819f40a`, `2cdcc1f` | SCRFD and AdaFace integration and local recognition release, with bundled fallback. | Preferred and bundled startup exercised in isolated runtimes. |
+| 24 Nov 2026 · `9734b20` | Independent ground-truth Evaluation Studio and frozen application release. | Final Chrome and clean-clone checks, 103 Python passes with four skips, and 14 JavaScript passes. |
+| 24 Nov 2026 · `c42b122`, `5a524db` | Disconnected-network acceptance evidence and interview presentation. | Developer offline acceptance, plus an inspected 11-slide PowerPoint and PDF. |
 
 ## Earlier regression tests · November 24, 2026
 
@@ -25,10 +35,6 @@ node --experimental-default-type=module --test tests/test_desktop_frontend.mjs
 - Documentation validation checked 57 local links and anchors, heading and table structure, the generated viewer's resource tags, public-file privacy patterns, and whitespace with `git diff --check`. Numeric cross-checks covered the main detector, recognition, combined and application tables as well as seven local checkpoint sizes and SHA-256 hashes.
 - Archify 3.3.0 passed `doctor`, schema validation, generation, strict artifact checking and automated browser checking on the successful retry. See [the diagram and procedure](../../ARCHITECTURE.md#archify-artifact).
 
-## Remaining desktop walkthrough
+## Later browser coverage
 
-1. At 1366 × 768 and 1920 × 1080, inspect the Dashboard, Gallery Manager, Analyze and Settings. Confirm keyboard access, focus, navigation state retention and overflow behavior.
-2. Choose a folder of roughly 50 safe reference images. Verify enrollment feedback, portraits, search, filtering, pending-face selection, and rejection details after failed replacement.
-3. Select and drag in a group photo. Verify source dimensions, original/annotated toggle, zoom and reset, bounding-box highlighting, result panel scrolling and downloads. Confirm unknown rows do not display an assigned identity.
-4. Switch each way in Settings. Confirm actual active state, cached gallery restoration, invalidation of old results, and fallback or failure feedback. Recheck connectivity after a local backend stop/restart.
-5. Inspect the browser Network panel for same-origin application requests. Capture four publishable screenshots with authorized inputs and add them to the README after review.
+The final release records targeted Chrome enrollment, Analyze, Evaluation Studio, download and stale-preview recovery. The developer recording independently documents the manual native-folder interaction and its resulting 24-reference enrollment. These observations do not imply a comprehensive cross-platform accessibility pass. [Final browser verification](RELEASE.md#evaluation-studio-verification) · [Optional validation](MISSING-EVIDENCE.md#optional-future-validation)

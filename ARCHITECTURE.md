@@ -11,7 +11,7 @@ FaceFind accepts reference images, maintains a gallery, analyzes a group photo, 
 | Requirement | Architectural response |
 |---|---|
 | Run the recognition demo on a CPU without sending face data to a hosted service | Loopback API, local browser assets and local ONNX-backed model adapters |
-| Remain runnable without authorized research checkpoints | Bundled YuNet + SFace, automatic fallback and explicit pipeline selection |
+| Remain runnable without separately supplied research checkpoints | Bundled YuNet + SFace, automatic fallback and explicit pipeline selection |
 | Preserve enrollment intent and report ambiguous references | Strict review, an optional dominant-face heuristic and correction |
 | Keep inference results reproducible enough to evaluate | Per-analysis provenance and a frozen copy in the browser |
 | Bound shared state and uploads | Versioned galleries, serialized API mutations and resource limits |
@@ -58,7 +58,7 @@ The cropped drawer records one run with SCRFD + AdaFace active and ready on CPU.
 | What we chose | What we gave up | Why |
 |---|---|---|
 | Local FastAPI and CPU inference | A hosted GPU service and its lower potential inference latency | The demo must run offline on one laptop. |
-| Bundled YuNet + SFace with an optional preferred research bundle | A single-model installation with uniform behavior across machines | The bundled path starts without restricted checkpoints, while authorized local users can use the preferred configuration. |
+| Bundled YuNet + SFace with an optional preferred research bundle | A single-model installation with uniform behavior across machines | The bundled path starts without restricted checkpoints, while users can supply the preferred checkpoints subject to their applicable terms. |
 | Process-local gallery and one worker | Durable enrollment and shared state across workers | Local vector reuse keeps the deployment small. |
 | Manual review and optional Smart selection | Fully automatic enrollment in ambiguous cases | A person's enrollment intent can differ from the highest-scoring or largest detected face. |
 | Independent browser evaluation of frozen inference | Annotation-guided changes to predictions during scoring | Correctness must be assessed against separately supplied evidence. |
@@ -277,6 +277,14 @@ Only after obtaining authorization, place `scrfd_10g_bnkps.onnx` and `adaface_ir
 ## Extensibility and constraints
 
 The pipeline registry and adapters isolate model construction, face geometry, embeddings and policy. Adding a model would require its own verified input contract, matching calibration, telemetry and rights review. In-memory galleries and browser evaluation avoid shared infrastructure while limiting durable state and multi-worker operation. The release deliberately keeps these constraints visible.
+
+## Architectural Evolution
+
+The browser and single worker suit a local interview workflow and simplify gallery ownership. Profile peak memory and background-operation latency before separating inference from gallery mutations. Measured queue contention or a need for concurrent operators would justify evaluating that change.
+
+The in-memory, pipeline-specific gallery supports cache restoration within a process and keeps persisted biometric data out of the current workflow. Repeated enrollment cost could justify testing local persistence after defining retention, consent, deletion and checkpoint compatibility. Any persisted gallery would need explicit model and revision provenance.
+
+The exact matcher is appropriate at the assignment scale. A larger deployment would justify profiling exact search before testing indexed retrieval. Compare decision agreement and open-set error rates as well as query latency. Keep independent browser-side evaluation and its provenance boundary in either design. [Validation plan](RESEARCH.md#future-research-and-validation)
 
 ## Archify artifact
 

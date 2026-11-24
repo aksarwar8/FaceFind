@@ -23,7 +23,7 @@ The repository carries the two checkpoint files with the model-directory notices
 
 The optional and experimental models above are excluded from distribution. SHA-256 values fingerprint local files and are not necessarily an upstream published checksum. The selected SCRFD + AdaFace configuration is a local research/demo configuration. Obtain and use any weights only under appropriate authorization. Do not infer permission to redistribute AdaFace weights from the repository's code license.
 
-The Milestone 5 runnable evaluator snapshot used only the two bundled checkpoints. The separate source review archive excludes model binaries. The authorized SCRFD and AdaFace files were used only in the isolated local preferred-model test.
+The Milestone 5 runnable evaluator snapshot used only the two bundled checkpoints. The separate source review archive excludes model binaries. Locally obtained SCRFD and AdaFace checkpoints were used in the isolated preferred-pipeline test. The test does not establish a redistribution or commercial-use grant. Users supply optional checkpoints separately, subject to the applicable terms.
 
 ## Dataset materials
 

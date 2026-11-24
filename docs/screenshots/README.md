@@ -1,6 +1,6 @@
 # Manual browser evidence
 
-The owner supplied eight captures. They show the following application states. Output images here are re-encoded crops or opaque-masked copies of real captures. Unredacted originals, underlying photographs and identity data remain private.
+Six approved, privacy-redacted screenshots are published. The evidence inventory below also records the private manual-evaluation captures. They show the following application states. Output images here are re-encoded crops or opaque-masked copies of real captures. Unredacted originals, underlying photographs and identity data remain private.
 
 | Supplied capture | What it shows | Documentation treatment |
 |---|---|---|
@@ -9,7 +9,7 @@ The owner supplied eight captures. They show the following application states. O
 | 03 Recognition Results | Analyze with ten detections and ten predicted identities | [Group-photo recognition](group-photo-recognition.png). The photograph and identity-linked results are masked. These are inference counts. |
 | 04 Evaluation Studio | Original composite and evaluated outcome rows populated through manual correspondence | Private. The independently supplied annotations are not verified for this capture. |
 | 05 Evaluation Metrics | Manual-correspondence summary for the owner's all-known example | Private. No matching annotation export validates the manual mapping. |
-| 06 System Settings | SCRFD + AdaFace shown as preferred, requested and active, with CPU model readiness | [System Settings](system-settings.png). Cropped to the engine controls; the background includes the invalid 5/9 manual evaluation and stays private. |
+| 06 System Settings | SCRFD + AdaFace shown as preferred, requested and active, with CPU model readiness | [System Settings](system-settings.png). Cropped to the engine controls; the background includes the unverified 5/9 manual evaluation and stays private. |
 | 07 Annotated Output | Exported synthetic group composite with boxes, assigned names and Unknown labels | Private. Contains source photo pixels and identities. |
 | 08 Offline Demo | Dashboard during the developer-performed disconnected-network test. Local backend connected, SCRFD-10G-KPS + AdaFace IR-18 ready, gallery empty, and no current analysis. | [Offline demo](offline-demo.png). Cropped to the application to remove browser tabs and desktop details. |
 

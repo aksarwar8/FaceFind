@@ -9,9 +9,9 @@ The developer directed the product and its operating constraints, challenged mod
 | Participant | Role and evidence |
 |---|---|
 | Human developer | Set the offline CPU goal, required genuine evidence and model-rights boundaries, decided which pipeline to retain, surfaced real enrollment and browser failures, and required independent correctness metrics. The project conversation records these directions. |
-| ChatGPT | The owner reports earlier research guidance, technical reasoning, experiment interpretation, architecture planning, implementation specifications and review synthesis. The original early ChatGPT records were unavailable for individual attribution. |
+| ChatGPT | Research guidance, technical reasoning, experiment interpretation and planning are credited in the project record. The developer checked the published share link. [Conversation record](docs/ai_chats/chatgpt/README.md) |
 | Codex | Inspected source and artifacts, implemented the application and tests, executed controlled comparisons and diagnostics, verified integration and browser behavior, built genuine Archify output, and performed release and clone checks. Source, saved results and project exchanges support this work. |
-| Claude | The owner reports independent critique of startup, methodology, model rights and documentation, plus a documentation review limited to four main documents. The review snapshot corroborates what could have been reviewed. The full review and original conversations were unavailable for quotation or line-by-line verification. |
+| Claude | Independent critique of startup, methodology, model rights and documentation informed the review register. The developer checked the published share link. [Conversation record](docs/ai_chats/claude/README.md) |
 
 ## Collaboration workflow
 
@@ -36,7 +36,7 @@ This chronology is reconstructed from the checked Git history, run identifiers a
 | Requirements and baseline | Specify a local face-gallery and group-photo workflow on CPU. | Initial application commits on November 21–23, 2026, with the modular YuNet + SFace baseline. |
 | Detector investigation | Compare on common inputs and retain partial runs truthfully. | WIDER FACE checked comparisons and the preserved shared YOLO prefix. |
 | Recognition and calibration | Evaluate alternatives for accurate known recognition and unknown rejection under CPU constraints. | LFW comparisons, per-model calibration and recognition cost. |
-| Methodological repair | Require consistent ground truth and explicit denominators. | V2 preflights references before considering an identity known. The original source of the diagnosis is unverified. |
+| Methodological repair | Require consistent ground truth and explicit denominators. | V2 preflights references before considering an identity known. The v2 preflight and consistency checks are evidenced by the [research record](RESEARCH.md#correcting-the-open-set-cohort). |
 | Preferred pipeline and desktop design | Keep SCRFD + AdaFace as the preferred research bundle and require a usable offline browser application. | Model adapters, fallback, versioned galleries and desktop workflows. |
 | Independent review and hardening | Request external critique, then require reproducible startup, rights clarity and defensive local behavior. | Review concerns recorded in the owner brief; verified code, dependency and regression changes. |
 | Real-world diagnostics | Challenge missed reference faces and an implausible second candidate. | Controlled scale experiment and a brick-wall false-positive investigation. |
@@ -57,7 +57,7 @@ The independent-review concern reported by the owner was that optional checkpoin
 
 **I decided:**
 
-Keep SCRFD + AdaFace preferred for the authorized research demo and retain YuNet + SFace as an independently runnable bundled option.
+Keep SCRFD + AdaFace preferred for local research use subject to the checkpoint terms and retain YuNet + SFace as an independently runnable bundled option.
 
 **Why:**
 

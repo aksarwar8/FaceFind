@@ -5,7 +5,7 @@ The Industry.AI Task A brief requires the full project-related AI chat history f
 | Service | Available evidence | What the developer must supply |
 |---|---|---|
 | ChatGPT | [Original shared conversation](https://chatgpt.com/share/6b05b0fa-83d8-83ee-ac66-abccda7e8bb6) · [Verification details](chatgpt/README.md) | Supply any earlier or separate project threads if recovered. |
-| Codex | [Sanitized transcripts from seven local FaceFind sessions](codex/README.md), with coverage and source record metadata. | Review the transcript candidates, supply any earlier or missing project sessions, and close the active-session coverage gap through submission. |
+| Codex | [Sanitized transcripts from seven local FaceFind sessions](codex/README.md), with coverage and source record metadata. | The first prompt and any earlier or separate sessions remain outstanding. The indexed active session ends at the completed presentation turn. |
 | Claude | [Original shared conversation](https://claude.ai/share/fbf921c0-3767-4289-a890-63b08d9ae486) · [Verification details](claude/README.md) | Supply any earlier or separate project threads if recovered. |
 
 The developer manually verified that both share links open without authentication and reviewed their contents for public disclosure. Earlier automated requests did not expose the conversation text.

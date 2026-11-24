@@ -1,6 +1,6 @@
 # FaceFind Codex history
 
-These Markdown files are sanitized review candidates derived from original local Codex session records. The original JSONL files remain privately in place. Trailing line-end whitespace is normalized. All timestamps are UTC. Sessions overlap in places. Each transcript preserves its own source order.
+These Markdown files are sanitized transcripts derived from original local Codex session records. The original JSONL files remain privately in place. Trailing line-end whitespace is normalized. All timestamps are UTC. Sessions overlap in places. Each transcript preserves its own source order.
 
 ## Coverage
 
@@ -11,14 +11,14 @@ These Markdown files are sanitized review candidates derived from original local
 | 2026-11-23T07:04:09.044Z | [session-2026-11-23T12-34-09.md](session-2026-11-23T12-34-09.md) | 37 | 102 | 2 | 2026-11-23T15:19:47.483Z |
 | 2026-11-23T15:28:03.368Z | [session-2026-11-23T20-58-03.md](session-2026-11-23T20-58-03.md) | 2 | 0 | 0 | 2026-11-23T15:30:39.663Z |
 | 2026-11-23T15:32:41.838Z | [session-2026-11-23T21-02-41.md](session-2026-11-23T21-02-41.md) | 17 | 103 | 14 | 2026-11-23T21:11:45.690Z |
-| 2026-11-24T05:38:36.585Z | [session-2026-11-24T11-08-36.md](session-2026-11-24T11-08-36.md) | 25 | 82 | 36 | 2026-11-24T15:43:16.682Z |
+| 2026-11-24T05:38:36.585Z | [session-2026-11-24T11-08-36.md](session-2026-11-24T11-08-36.md) | 32 | 99 | 36 | 2026-11-24T17:31:29.732Z |
 | 2026-11-24T05:47:54.019Z | [session-2026-11-24T11-17-54.md](session-2026-11-24T11-17-54.md) | 2 | 6 | 7 | 2026-11-24T08:23:25.869Z |
 
-**Totals** 96 user prompts, 328 Codex messages, and 59 terminal excerpts across 7 sessions.
+**Totals** 103 user prompts, 345 Codex messages, and 59 terminal excerpts across 7 sessions.
 
 The earliest recovered project prompt (22 November 2026 UTC) asks for a senior engineering review of an existing FaceFind assignment. The Git repository contains an initialization commit dated 21 November 2026. The initial development prompt is unverified, and the number of earlier missing sessions is unknown.
 
-The active session is captured through the screenshot-evidence integration. The final publication turn is outside this snapshot. The refresh adds original messages; the terminal excerpt count is unchanged. One included inspection request has no recorded assistant reply.
+The active session includes the completed technical-presentation turn through **2026-11-24 17:31:29.732 UTC** (23:01:29.732 IST). The subsequent documentation-audit turn falls outside this cutoff. The refresh adds original visible messages and preserves the earlier terminal excerpts. One included inspection request has no recorded assistant reply.
 
 ## Records checked and exclusions
 

@@ -328,7 +328,7 @@ The five instrumented stage means total **1,024.9 ms** for SCRFD + AdaFace and *
 | Detection on the ten-composite comparison | Recall .9800, precision .9608 | Recall .9100, precision .9785 |
 | Local warm loopback mean | 1,257 ms | 553 ms |
 | Combined checkpoint size | 113.03 decimal MB | 38.93 decimal MB |
-| Runtime and calibration | Optional CPU runtime and authorized weights; rounded 50-way calibration | OpenCV and bundled checkpoints; legacy acceptance and tentative rules |
+| Runtime and calibration | Optional CPU runtime and separately supplied weights; rounded 50-way calibration | OpenCV and bundled checkpoints; legacy acceptance and tentative rules |
 | Rights | SCRFD pretrained terms restrict use to non-commercial research. AdaFace checkpoint grant is unresolved. | Bundled MIT and Apache-2.0 notices. Training-data and product-deployment rights remain separate. |
 | Role | Preferred local research and demonstration path | Independently runnable evaluator setup and startup recovery |
 
@@ -340,6 +340,20 @@ The preferred system buys better group recall and known identification at greate
 - **Synthetic images and overlap.** Both group-composite cohorts have projected annotations. The final cohort shares identities with calibration, and overlap with training datasets was not established. The genuine photo benchmark has no identity ground truth.
 - **Scale and conditional selection.** Small stress sets expose specific failure mechanisms. Conditional recognition can remove detection or processing failures from its denominator. Report it alongside end-to-end rates and raw counts.
 - **Hardware and rights.** CPU timings describe recorded local runs only. The app performance record lacks a confirmed CPU SKU and measured memory profile. Checkpoint availability and rights constrain deployment. [Checkpoint and dataset rights](models/face/MODEL_LICENSES.md)
+
+## Future Research and Validation
+
+These proposals define validation work beyond the frozen release. Each experiment should document cohort construction, calibration splits, operating points and failure counts before drawing deployment conclusions.
+
+| Priority | Motivation and proposed design | Reported measures and engineering value |
+|---|---|---|
+| High · Genuine group photographs | Build a representative, separately annotated benchmark with redistribution permission. Sample face sizes, blur, occlusion, illumination and pose, and predefine the gallery and operating point. | Stratified detection precision and recall, conditional recognition and end-to-end known acceptance and unknown rejection. Trace misses by stage to prioritize changes. |
+| High · Open-set calibration | Use larger disjoint identity pools, independent calibration/test splits and a deliberately labeled look-alike set. Repeat at multiple gallery sizes with paired probes and frozen policies per size. Audit false accepts and rejected known identities. | FPIR and FNIR by gallery size, error category and subgroup, with uncertainty and numerator/denominator. Estimate how calibration transfers across operating conditions. |
+| High · Adaptive enrollment | Compare the primary pass and zero-result retry on unseen reference photos with annotated intended faces and distractors. Stratify by face scale and quality, and include existing successful enrollments as a control. | Intended-face recovery, added false positives, review burden and retry latency. Determine when adaptive enrollment improves the actual selection workflow. |
+| Performance · CPU and memory | Profile repeated requests and stage timings across machines. Compare ONNX Runtime options, quantization and batched embeddings against the frozen pipeline. | Warm and cold latency, p95, throughput, peak working set and paired changes to FPIR/FNIR. Choose an operating point with measured accuracy cost. |
+| Performance · Larger galleries | Scale the exact search beyond the assignment gallery with controlled probe counts. Evaluate approximate retrieval only if profiling identifies matching as a bottleneck. | Search latency, memory, top-k recall and end-to-end decision changes. Establish when indexing cost is justified. |
+| Usability · Compatibility and review | Build fixtures for additional image formats and Unicode scripts, with keyboard-only tasks across target desktop platforms. Test ambiguity controls and pre-enrollment quality feedback on consented examples. | Decode and rendering pass rates, accessibility task completion, review time and intended-face selection errors. Improve diagnosis and recovery for operators. |
+| Longer term · Identity representation and persistence | Compare single references with multiple views and quality-aware aggregation. Prototype local persistent storage only after assessing data minimization, consent, deletion and model/data rights. | Calibration transfer, error rates by reference quality, storage and deletion checks. Determine whether additional reference data or persistence provides sufficient practical value. |
 
 ## Data and primary references
 

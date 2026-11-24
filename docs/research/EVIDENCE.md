@@ -21,7 +21,7 @@ The run identifiers below refer to retained local artifacts. This index carries 
 | `release_verification_20261124` | Guarded real HTTP workflow, clean-install status and actual export validation | See the [release report](../verification/RELEASE.md). Separate from historical performance benchmarking. |
 | `facefind_milestone2_verification_20261124_01` | Verification report, results, adapter check and environment context | Workflow smoke, calibration provenance and cache behavior. See the [milestone record](../verification/MILESTONES.md). |
 
-The [machine-readable aggregates](benchmark-aggregates.json) contain selected detector and FastAPI benchmark measurements. The code supports the implemented resize and padding policies. The original single-photo before/after measurements, historical identity near-miss, official LFW pairs report, and reason for the YOLO run interruption were unavailable. Local hashes and bytes are in the [model rights register](../../models/face/MODEL_LICENSES.md).
+The [machine-readable aggregates](benchmark-aggregates.json) contain selected detector and FastAPI benchmark measurements. The code supports the implemented resize and padding policies. The [historical evidence register](../verification/MISSING-EVIDENCE.md#historical-experimental-records) distinguishes recovered protocols from unverified earlier observations. Local hashes and bytes are in the [model rights register](../../models/face/MODEL_LICENSES.md).
 
 ## Final methodology clarification
 
