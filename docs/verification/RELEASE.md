@@ -65,7 +65,7 @@ The authorized browser host was unavailable during the baseline run. Later targe
 ## Outstanding issues
 
 - **P0** — Complete original AI histories remain outstanding under the recovered brief. Supply authentic exports or accessible share links from the first project prompt. [History index](../ai_chats/README.md)
-- **P1** — The owner supplied manual browser captures and redacted versions are ready for review. A full desktop walkthrough and a disconnected-network demonstration remain outside the verified scope. [Screenshot register](../screenshots/README.md)
+- **P1** — A broader desktop walkthrough remains outside the verified scope. The developer completed a disconnected-network acceptance test. [Screenshot register](../screenshots/README.md)
 - **P1** — The Smart heuristic can choose the wrong person when the intended face is smaller. Use strict review or verify each automatic choice before a consequential demo.
 - **P2** — Test optional HEIC/HEIF decoding and shaped Indic labels on an RAQM-enabled installation and collect representative annotated real-photo evidence if future use requires broader coverage. Research weight rights remain restricted or unresolved and the bundled evaluator path is independent of them.
 
@@ -114,9 +114,13 @@ Public commit `2cdcc1fcacceb1abea083baf59ec1ccb2af5f078` was freshly cloned from
 
 ## Owner-supplied browser evidence
 
-Dashboard, Gallery Manager, Analyze and the System Settings drawer show a ready local CPU engine, a 60-reference gallery and a completed group-photo analysis. These captures verify visible application states. No disconnected-network recording or equivalent evidence was supplied. The existing guarded runtime and fresh-clone Chrome network checks remain the offline evidence. [Screenshot register](../screenshots/README.md)
+Dashboard, Gallery Manager, Analyze and the System Settings drawer show a ready local CPU engine, a 60-reference gallery and a completed group-photo analysis. These captures verify visible application states. [Screenshot register](../screenshots/README.md)
 
 The Evaluation Studio capture comes from the saved Chrome run with imported ground truth. The five saved report hashes match their group images and all five reports are marked complete. The Easy capture shows 9/10 correct outcomes using approximate boxes and an IoU threshold of 0.50. The separate manual-correspondence screenshots lack a matching verified export and are excluded from benchmark evidence. [Controlled cohort](../../RESEARCH.md#evaluation-studio-demonstration)
+
+## Developer-performed disconnected-network acceptance
+
+The developer disconnected the laptop from the internet and confirmed that FaceFind started and worked correctly while disconnected. The supplied Dashboard capture shows **Backend connected**, **Engine ready**, and **SCRFD-10G-KPS + AdaFace IR-18**. It shows an empty gallery and no current analysis, so it documents the startup state. This manual acceptance check is separate from the earlier guarded runtime and fresh-clone Chrome network checks. [Redacted offline demo](../screenshots/offline-demo.png)
 
 ## Evaluation Studio verification
 

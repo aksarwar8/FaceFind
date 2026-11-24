@@ -6,7 +6,7 @@ The recovered Task A brief, as supplied by the developer, is the basis for this 
 
 | Requirement | Status | Evidence or outstanding action |
 |---|---|---|
-| Offline face identification on a local laptop | Verified in tested scope | CPU-only loopback architecture, guarded local inference, and a fresh-clone Chrome smoke test with no external browser requests. A whole-machine disconnection was outside the test scope. [Release verification](RELEASE.md) |
+| Offline face identification on a local laptop | Developer acceptance verified | The developer disconnected the laptop from the internet and confirmed startup and local operation. The Dashboard capture shows the local backend connected and the preferred engine ready. [Release verification](RELEASE.md#developer-performed-disconnected-network-acceptance) |
 | UI folder selection for roughly 50 named references | Implemented, native picker not independently exercised | The directory input is wired to the named gallery upload. The isolated run enrolled 52 references and targeted Chrome tests enrolled 60. These checks verify enrollment, while manual OS folder-picker interaction remains unverified. [UI](../../web/index.html) · [Release verification](RELEASE.md) |
 | Group photograph upload | Verified | Chrome and local API workflows exercised upload and analysis. [Release verification](RELEASE.md) |
 | Annotated identities and Unknown labels | Verified | Annotated JPEGs and structured known/Unknown outcomes were checked. [Release verification](RELEASE.md) · [Synthetic demo](../../RESEARCH.md#evaluation-studio-demonstration) |

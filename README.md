@@ -91,6 +91,8 @@ The [research report](RESEARCH.md) separates these cohorts, explains why the ori
 
 ## Reproducibility and boundaries
 
+**Offline acceptance.** The developer disconnected the laptop from the internet and confirmed that FaceFind started and worked locally. The redacted startup capture shows the local backend connected and SCRFD-10G-KPS + AdaFace IR-18 ready. [Offline screenshot](docs/screenshots/offline-demo.png) · [Verification scope](docs/verification/RELEASE.md#developer-performed-disconnected-network-acceptance)
+
 FastAPI serves the local browser frontend and owns the in-memory galleries and model bundles. Inference runs in the server process. Evaluation and report preparation run in the browser. [System design and Archify provenance](ARCHITECTURE.md)
 
 ~~~powershell
