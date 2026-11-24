@@ -2,7 +2,7 @@
 
 **Local, open-set face identification for group photographs.** FaceFind enrolls a named reference gallery, detects faces in a group photo, and assigns a name only when the active matching rule accepts the result. Faces outside the gallery can remain **Unknown**. The desktop browser and CPU inference run on one workstation.
 
-[Quick start](#installation-and-first-run) · [Evaluation Studio](#evaluation-studio) · [Research report](RESEARCH.md) · [System design](ARCHITECTURE.md) · [AI collaboration](AI_COLLAB.md)
+[Quick start](#installation-and-first-run) · [Evaluation Studio](#evaluation-studio) · [Research report](RESEARCH.md) · [System design](ARCHITECTURE.md) · [AI collaboration](AI_COLLAB.md) · [Technical Presentation](docs/presentation/README.md)
 
 ## At a glance
 
@@ -108,6 +108,7 @@ The application is designed for one local workstation. Gallery and evaluation st
 
 | Document | Use it to find |
 |---|---|
+| Technical Presentation ([PDF](docs/presentation/FaceFind_Technical_Presentation.pdf) · [PowerPoint](docs/presentation/FaceFind_Technical_Presentation.pptx)) | Interview walkthrough and technical appendix |
 | [Research](RESEARCH.md) | Cohorts, scientific reasoning, comparative figures and negative results |
 | [Architecture](ARCHITECTURE.md) | State, inference and evaluation, API contracts, security, and Archify provenance |
 | [AI collaboration](AI_COLLAB.md) | Human decisions, AI contributions, original excerpts, and review outcomes |
