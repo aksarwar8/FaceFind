@@ -241,11 +241,11 @@ These are three verbatim excerpts from the available project conversation, with 
 
 > The results apply to five synthetic composites with approximate boxes. They do not establish accuracy on genuine group photographs.
 
-The retained original exchanges document the desired outcomes, the browser-reported failure, the controlled evaluation and the publication authorization. The developer supplied share URLs for Claude and ChatGPT. The unauthenticated checks did not expose their conversation text for privacy review or attribution. [ChatGPT evidence status](docs/ai_chats/chatgpt/README.md) · [Claude evidence status](docs/ai_chats/claude/README.md) [Evidence gaps](docs/verification/MISSING-EVIDENCE.md)
+The retained original exchanges document the requested outcomes, the browser-reported failure, the controlled evaluation and the publication authorization. The developer manually opened both shared histories without signing in, reviewed their contents for privacy, and approved publication. Earlier automated requests did not expose the conversation text. [ChatGPT conversation](https://chatgpt.com/share/6b05b0fa-83d8-83ee-ac66-abccda7e8bb6) · [Claude conversation](https://claude.ai/share/fbf921c0-3767-4289-a890-63b08d9ae486)
 
 ## Full-history evidence still needed
 
-The recovered assignment brief requires the full project-related AI history from the first prompt. The excerpts above establish three selected exchanges. Seven recovered Codex sessions have sanitized transcripts. The first Codex development prompt, any earlier or missing sessions, and the original ChatGPT and Claude conversations still need authentic exports or accessible share links. [History index](docs/ai_chats/README.md)
+The recovered assignment brief requires the full project-related AI history from the first prompt. The three selected excerpts, seven recovered Codex sessions, and two shared conversations document available evidence. The first Codex development prompt remains unrecovered, and coverage of any earlier or separate ChatGPT and Claude threads has not been established. [History index](docs/ai_chats/README.md)
 
 ## Reflection
 

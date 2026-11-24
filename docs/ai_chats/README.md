@@ -4,10 +4,12 @@ The Industry.AI Task A brief requires the full project-related AI chat history f
 
 | Service | Available evidence | What the developer must supply |
 |---|---|---|
-| ChatGPT | Developer-supplied share URL. Conversation content unavailable in the unauthenticated check. [Verification status](chatgpt/README.md) | A reviewable original export or accessible share page, including the earliest project prompt. |
+| ChatGPT | [Original shared conversation](https://chatgpt.com/share/6b05b0fa-83d8-83ee-ac66-abccda7e8bb6) · [Verification details](chatgpt/README.md) | Supply any earlier or separate project threads if recovered. |
 | Codex | [Sanitized transcripts from seven local FaceFind sessions](codex/README.md), with coverage and source record metadata. | Review the transcript candidates, supply any earlier or missing project sessions, and close the active-session coverage gap through submission. |
-| Claude | Developer-supplied share URL. Conversation content unavailable in the unauthenticated check. [Verification status](claude/README.md) | A reviewable original export or accessible share page, including the independent review and documentation critique. |
+| Claude | [Original shared conversation](https://claude.ai/share/fbf921c0-3767-4289-a890-63b08d9ae486) · [Verification details](claude/README.md) | Supply any earlier or separate project threads if recovered. |
 
-**Coverage status** Incomplete. The local Codex transcripts cover the recovered project sessions. The first development prompt and the original ChatGPT and Claude histories remain unverified.
+The developer manually verified that both share links open without authentication and reviewed their contents for public disclosure. Earlier automated requests did not expose the conversation text.
+
+**Coverage status** Incomplete. The first Codex development prompt remains unrecovered. The shared ChatGPT and Claude conversations do not establish coverage from the first prompt or across separate threads.
 
 If an export contains credentials, private images, or unrelated personal information, retain the original privately and publish a separately reviewed copy with explicit redaction markers in place. Preserve message order, speakers, and technical meaning. Check that shared links open for an evaluator without account-specific permissions.

@@ -1,3 +1,5 @@
 # FaceFind Claude conversation evidence
 
-The developer supplied an original share URL for review. The unauthenticated share page returned a shell without conversation content. The content request returned HTTP 403. The link is held privately pending review for sensitive content. Conversation scope and coverage from the first prompt could not be verified. A reviewable export or an accessible share page would allow the missing checks.
+[Open the original Claude conversation](https://claude.ai/share/fbf921c0-3767-4289-a890-63b08d9ae486)
+
+The developer opened the share link in an unauthenticated browser, reviewed its contents for privacy, and authorized public inclusion. Earlier automated requests did not expose the conversation text. Coverage from the first project prompt and the existence of any earlier or separate threads remain unverified.
