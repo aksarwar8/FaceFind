@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FaceFind local recognition architecture",
+    "output": "docs/architecture/facefind.html",
+    "quality_profile": "showcase",
+    "locale": "en"
+  },
+  "layout": {
+    "mode": "auto"
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "frontend",
+      "label": "Desktop browser",
+      "sublabel": "Dashboard · Gallery · Analyze"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "FastAPI",
+      "sublabel": "Routes · shared image ingestion"
+    },
+    {
+      "id": "pipeline",
+      "type": "backend",
+      "label": "Recognition pipeline",
+      "sublabel": "Detect · align · embed · match"
+    },
+    {
+      "id": "models",
+      "type": "backend",
+      "label": "CPU model bundles",
+      "sublabel": "SCRFD/AdaFace or YuNet/SFace"
+    },
+    {
+      "id": "gallery",
+      "type": "database",
+      "label": "Process memory",
+      "sublabel": "Gallery and immutable review IDs"
+    }
+  ],
+  "connections": [
+    {
+      "id": "api-request",
+      "from": "browser",
+      "to": "api",
+      "label": "Local HTTP",
+      "variant": "emphasis"
+    },
+    {
+      "id": "recognize",
+      "from": "api",
+      "to": "pipeline",
+      "label": "Analyze photo"
+    },
+    {
+      "id": "active-models",
+      "from": "pipeline",
+      "to": "models",
+      "label": "Run active bundle"
+    },
+    {
+      "id": "cache",
+      "from": "api",
+      "to": "gallery",
+      "label": "Enroll / reuse gallery"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Browser and API",
+      "items": [
+        "Same-origin uploads and status requests",
+        "Upload and pixel limits precede image normalization",
+        "API returns no-store previews and Unicode JPEG annotations",
+        "Browser generates JPEG and CSV downloads"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Enrollment and recognition",
+      "items": [
+        "Single-face references are embedded once",
+        "Gallery SCRFD retries zero detections at 640 px",
+        "Review and correction use immutable reference IDs",
+        "Group photos use one detection pass, cosine matching and conflict resolution"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Startup and switching",
+      "items": [
+        "SCRFD + AdaFace is the preferred research configuration",
+        "YuNet + SFace is the automatic fallback when available",
+        "Switching restores only the selected pipeline’s cached gallery"
+      ]
+    }
+  ]
+}

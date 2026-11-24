@@ -1,0 +1,2 @@
+# Preserve Archify's original output. The generator indents several blank lines.
+docs/architecture/facefind.html -text whitespace=-blank-at-eol

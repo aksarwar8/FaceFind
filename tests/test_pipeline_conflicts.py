@@ -78,7 +78,7 @@ class DuplicateIdentityConflictTests(unittest.TestCase):
             1: prediction("person-a", "possible", 0.34),
         })
         self.assertEqual(results[1]["status"], "unknown")
-        self.assertEqual(results[1]["identity"], "person-a")
+        self.assertIsNone(results[1]["identity"])
         self.assertEqual(results[1]["best_score"], 0.34)
         self.assertEqual(results[1]["conflict_with"], 1)
 

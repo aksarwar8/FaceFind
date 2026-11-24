@@ -19,7 +19,7 @@ class FaceDetector:
         nms_threshold=0.3,
         max_dimension=1280,
     ):
-        if not MODEL_PATH.exists():
+        if not MODEL_PATH.is_file():
             raise FileNotFoundError(
                 f"YuNet model not found: {MODEL_PATH}"
             )

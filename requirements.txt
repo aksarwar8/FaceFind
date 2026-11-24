@@ -1,9 +1,11 @@
 
 numpy==1.26.4
 opencv-contrib-python==4.10.0.84
-Pillow==10.4.0
-fastapi==0.115.12
+Pillow==13.0.0
+fastapi==0.165.0
+# The bounded multipart parser uses Starlette's form parsing hooks.
+starlette==1.10.0
 pydantic==2.11.4
 uvicorn==0.34.0
-python-multipart==0.0.20
+python-multipart==0.0.34
 pytest==8.3.5

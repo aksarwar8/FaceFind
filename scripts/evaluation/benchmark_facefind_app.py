@@ -253,7 +253,7 @@ def run():
                     raise RuntimeError(f"Manual reference preview failed for {pipeline_id}: {pending_id}")
                 # Mimic an explicit user face choice for timing reproducibility:
                 # largest detected face, then closest image center, then top-left.
-                pending_record = app.state.pending_references[pending_id]
+                pending_record = next(item for item in app.state.pending_references if item["pending_id"] == pending_id)
                 ph, pw = pending_record["image"].shape[:2]
                 center = np.array([pw / 2, ph / 2])
                 def selection_key(index):

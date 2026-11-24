@@ -15,8 +15,10 @@ MODEL_PATH = (
 
 
 class FaceEmbedder:
+    dimension = 128
+
     def __init__(self):
-        if not MODEL_PATH.exists():
+        if not MODEL_PATH.is_file():
             raise FileNotFoundError(
                 f"SFace model not found: {MODEL_PATH}"
             )

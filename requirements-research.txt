@@ -3,7 +3,8 @@
 # with --no-deps as documented in README.md to avoid pulling opencv-python.
 onnxruntime==1.32.0
 scikit-image==0.26.0
-onnx
-scipy
-requests
-tqdm
+onnx==1.23.2
+ml_dtypes==0.5.4
+scipy==1.17.1
+requests==2.34.2
+tqdm==4.70.1

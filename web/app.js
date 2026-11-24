@@ -1,503 +1,269 @@
+import { post, request, validStatus } from "./api.js";
+import { mountGallery } from "./gallery.js";
+import { mountAnalysis, validateAnalysis } from "./analysis.js";
+import { mountDashboard } from "./dashboard.js";
+import { mountSettings, referenceSelectionPolicy } from "./settings.js";
+import { $, notice, busyNotice, setStatus } from "./ui.js";
 
-const API = "/api";
+const state = {
+  workspace: "dashboard",
+  connected: null,
+  health: null,
+  status: null,
+  pipeline: null,
+  operation: null,
+  error: "",
+  galleryFiles: [],
+  galleryUpload: null,
+  referenceSelectionPolicy: referenceSelectionPolicy(),
+  group: null,
+  result: null,
+};
+const mib = 1024 * 1024;
+let previewRequest;
 
-const $ = (id) => document.getElementById(id);
-
-let selectedGalleryFiles = [];
-let selectedGroupFile = null;
-const SUPPORTED_GALLERY_EXTENSIONS = new Set([
-    ".jpg", ".jpeg", ".png", ".webp", ".bmp"
-]);
-
-async function apiRequest(endpoint, options = {}) {
-    const response = await fetch(`${API}${endpoint}`, options);
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-        throw new Error(data.detail || "Something went wrong.");
-    }
-
-    return data;
+function render() {
+  const { connected, status, health, operation } = state;
+  const ready = status?.engine_initialized ?? health?.engine_initialized;
+  const engine = operation?.kind === "pipeline" || ready == null && connected === null ? "Initializing"
+    : !connected || ready == null ? "Engine status unavailable"
+    : ready ? "Engine ready" : "Engine unavailable";
+  const engineTone = connected && ready && operation?.kind !== "pipeline" ? "green" : connected && ready === false ? "red" : "";
+  setStatus($("backend-status"), connected == null ? "Connecting" : connected ? "Backend connected" : "Backend unavailable",
+    connected == null ? "" : connected ? "green" : "red");
+  setStatus($("engine-status"), engine, engineTone);
+  setStatus($("sidebar-engine"), engine, engineTone);
+  $("sidebar-pipeline").textContent = status?.active_pipeline_label ?? health?.active_pipeline_id ?? "Pipeline unavailable";
+  renderDashboard(engine);
+  const policy = status?.image_upload;
+  $("gallery-upload-policy").textContent = policy
+    ? `${policy.formats.map(format => format === "HEIF" ? "HEIC/HEIF" : format).join(", ")} · Up to ${policy.max_bytes / mib} MiB per image`
+    : "Image limits are available when the backend connects.";
+  $("group-upload-policy").textContent = policy
+    ? `or choose a file · Up to ${policy.max_bytes / mib} MiB` : "or choose a file";
+  const warning = status?.fallback_reason ?? status?.startup_error ?? health?.fallback_reason ?? health?.startup_error;
+  notice($("system-message"), state.error || warning, state.error ? "error" : "warning");
+  for (const button of document.querySelectorAll("[data-refresh]")) button.disabled = Boolean(operation);
+  renderGallery();
+  renderAnalysis();
+  renderSettings();
 }
 
-function showMessage(element, message, type = "") {
-    element.textContent = message;
-    element.className = `message ${type}`;
+function adoptStatus(next) {
+  validStatus(next);
+  const previous = state.status;
+  if (previous && (next.gallery_revision !== previous.gallery_revision
+    || next.active_pipeline_id !== previous.active_pipeline_id || !next.engine_initialized || !next.gallery_loaded)) {
+    state.result = null;
+  }
+  if (previous?.active_pipeline_id !== next.active_pipeline_id) {
+    state.galleryUpload = null;
+    notice($("gallery-message"));
+    notice($("analysis-message"));
+  } else if (state.operation?.kind === "refresh") {
+    state.galleryUpload = null;
+    notice($("gallery-message"));
+  }
+  state.status = next;
 }
 
-function updateGalleryUI(data) {
-    $("people-count").textContent = data.people_count ?? 0;
-    $("pending-count").textContent = data.pending_references ?? 0;
-
-    $("gallery-badge").textContent =
-        data.gallery_loaded ? "READY" : "EMPTY";
-
-    $("gallery-summary").textContent =
-        data.gallery_loaded
-            ? `${data.people_count} identities loaded successfully.`
-            : "Your reference gallery is empty.";
-
-    $("clear-gallery").disabled = !data.gallery_loaded &&
-        !data.pending_references;
-
-    $("analyze-photo").disabled =
-        !data.gallery_loaded || !selectedGroupFile;
-
-    const pending = data.pending || [];
-    $("pending-section").hidden = pending.length === 0;
-
-    renderPending(pending);
-    if (data.active_pipeline_id && $("pipeline-select")) {
-        $("pipeline-select").value = data.active_pipeline_id;
-    }
+async function syncStatus() {
+  const [health, status, pipeline] = await Promise.allSettled([
+    request("/health").then(data => {
+      if (typeof data.engine_initialized !== "boolean") throw new Error("Invalid engine health response.");
+      return data;
+    }),
+    request("/status").then(validStatus),
+    request("/pipeline").then(data => {
+      if (!Array.isArray(data.available_pipelines)
+          || !data.available_pipelines.every(item => typeof item.id === "string" && typeof item.label === "string")) {
+        throw new Error("Invalid pipeline metadata.");
+      }
+      return data;
+    }),
+  ]);
+  const replies = [health, status, pipeline];
+  state.connected = replies.some(reply => reply.status === "fulfilled" || reply.reason?.status);
+  state.health = health.status === "fulfilled" ? health.value : null;
+  state.pipeline = pipeline.status === "fulfilled" ? pipeline.value : null;
+  if (status.status === "fulfilled") adoptStatus(status.value);
+  else state.status = null;
+  if (state.result && (!state.status || state.result.pipeline_id !== state.status.active_pipeline_id
+    || state.result.gallery_revision !== state.status.gallery_revision)) {
+    state.result = null;
+  }
+  const failure = replies.find(reply => reply.status === "rejected");
+  state.error = state.connected ? failure?.reason.message ?? "" : "The local FaceFind backend is unavailable. Start the app and refresh status.";
 }
 
-async function refreshStatus() {
-    try {
-        const [health, status] = await Promise.all([
-            apiRequest("/health"),
-            apiRequest("/status")
-        ]);
-
-        $("engine-status").textContent =
-            health.engine_initialized ? "READY" : "OFFLINE";
-
-        updateGalleryUI(status);
-    } catch (error) {
-        $("engine-status").textContent = "ERROR";
-        showMessage($("gallery-message"), error.message, "error");
-    }
+async function operate(kind, target, label, work) {
+  if (state.operation) return;
+  const started = performance.now();
+  state.operation = { kind };
+  const stopTimer = target ? busyNotice(target, label, started) : null;
+  render();
+  try {
+    return await work(started);
+  } catch (error) {
+    if (error.disconnected || error.status === 409 || !error.status) await syncStatus();
+    if (target) notice(target, error.message, "error");
+    else state.error = error.message;
+  } finally {
+    stopTimer?.();
+    state.operation = null;
+    render();
+  }
 }
 
-$("pipeline-select").addEventListener("change", async (event) => {
-    const select = event.target;
-    select.disabled = true;
-    showMessage($("pipeline-message"), "Loading local models...");
-    try {
-        const data = await apiRequest("/pipeline", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pipeline_id: select.value })
-        });
-        updateGalleryUI(data);
-        showMessage(
-            $("pipeline-message"),
-            `${data.active_pipeline_label} ready (${data.model_initialization_ms.toFixed(1)} ms initialization). ` +
-            (data.gallery_loaded ? "Its cached gallery is ready." : "Build a gallery for this pipeline."),
-            "success"
-        );
-    } catch (error) {
-        showMessage($("pipeline-message"), error.message, "error");
-        await refreshStatus();
-    } finally {
-        select.disabled = false;
+const refresh = () => operate("refresh", null, "", syncStatus);
+function chooseGallery(files) {
+  if (state.operation || !files.length) return;
+  state.galleryFiles = files;
+  notice($("gallery-message"));
+  render();
+}
+
+function uploadGallery() {
+  if (!state.connected || !state.status?.engine_initialized || !state.galleryFiles.length) return;
+  const body = new FormData();
+  for (const file of state.galleryFiles) body.append("files", file);
+  body.append("reference_selection_policy", state.referenceSelectionPolicy);
+  const target = $("gallery-message");
+  operate("gallery", target, "Uploading and enrolling reference photos…", async () => {
+    const data = await post("/gallery", body, state.status);
+    adoptStatus(data);
+    state.galleryUpload = data.upload_summary;
+    state.galleryFiles = [];
+    notice(target, data.message, data.build_succeeded ? "success" : "warning");
+  });
+}
+
+function reviewReference(item, faceIndex) {
+  const selecting = faceIndex != null;
+  const target = $("gallery-message");
+  operate("review", target, selecting ? "Enrolling selected face…" : "Skipping reference…", async () => {
+    const data = await post(selecting ? "/gallery/select" : "/gallery/skip", {
+      pending_id: item.pending_id, face_index: faceIndex, expected_identity: item.identity,
+    }, state.status);
+    adoptStatus(data);
+    render();
+    notice(target, data.message, "success");
+  });
+}
+
+function reviewAutomaticReference(item, faceIndex) {
+  return operate("automatic-review", $("automatic-message"), "Saving reference selection…", async () => {
+    const data = await post(`/gallery/automatic/${item.pending_id}`, {
+      revision: item.revision, face_index: faceIndex,
+    }, state.status);
+    adoptStatus(data);
+    notice($("gallery-message"), data.message, "success");
+    return true;
+  });
+}
+
+function clearGallery() {
+  if (state.operation || !window.confirm("Clear the reference gallery for the active pipeline?")) return;
+  const target = $("gallery-message");
+  operate("clear", target, "Clearing gallery…", async () => {
+    const data = await post("/gallery/clear", null, state.status);
+    adoptStatus(data);
+    state.galleryUpload = null;
+    state.galleryFiles = [];
+    notice(target, data.message, "success");
+  });
+}
+
+async function choosePhoto(file) {
+  if (!file || state.operation) return;
+  previewRequest?.abort();
+  state.result = null;
+  state.group = null;
+  const target = $("analysis-message");
+  notice(target);
+  const limit = state.status?.image_upload?.max_bytes;
+  if (!file.size || limit && file.size > limit) {
+    notice(target, file.size ? `File exceeds ${limit / mib} MiB.` : "Choose a nonempty image.", "error");
+    render();
+    return;
+  }
+  const controller = new AbortController();
+  previewRequest = controller;
+  const group = { file, url: null, width: null, height: null };
+  state.group = group;
+  render();
+  try {
+    const body = new FormData();
+    body.append("file", file);
+    const data = await request("/image/preview", { method: "POST", body, signal: controller.signal });
+    if (state.group !== group) return;
+    if (typeof data.preview !== "string" || !data.preview.startsWith("data:image/png;base64,")
+        || !Number.isInteger(data.width) || data.width < 1 || !Number.isInteger(data.height) || data.height < 1) {
+      throw new Error("The backend returned an invalid image preview.");
     }
+    Object.assign(group, { url: data.preview, width: data.width, height: data.height });
+  } catch (error) {
+    if (state.group !== group) return;
+    state.group = null;
+    notice(target, error.message, "error");
+  }
+  render();
+}
+
+function canAnalyze() {
+  const status = state.status;
+  return Boolean(state.connected && !state.operation && state.group?.width
+    && status?.engine_initialized && status.gallery_loaded && status.gallery_pipeline_id === status.active_pipeline_id);
+}
+
+function runAnalysis() {
+  if (!canAnalyze()) return;
+  const target = $("analysis-message");
+  operate("analysis", target, "Detecting and recognizing faces…", async started => {
+    const body = new FormData();
+    body.append("file", state.group.file);
+    const data = validateAnalysis(await post("/analyze", body, state.status), state.status);
+    state.result = { ...data, apiLatency: performance.now() - started };
+    notice(target, `Analysis complete · ${data.face_count} detected`, "success");
+  });
+}
+
+function switchPipeline(id) {
+  if (!id || id === state.status?.active_pipeline_id) return;
+  const target = $("pipeline-message");
+  operate("pipeline", target, "Initializing local models…", async () => {
+    const data = await post("/pipeline", { pipeline_id: id }, state.status);
+    adoptStatus(data);
+    await syncStatus();
+    notice(target, data.gallery_loaded ? "Pipeline ready. Cached gallery restored." : "Pipeline ready. Enroll references for this pipeline.", "success");
+  });
+}
+
+function navigate(focus = false) {
+  const target = location.hash.slice(1);
+  if (target === "main") return;
+  const name = { dashboard: "Dashboard", gallery: "Gallery", analyze: "Analyze" };
+  state.workspace = Object.hasOwn(name, target) ? target : "dashboard";
+  for (const page of Object.keys(name)) $(`workspace-${page}`).hidden = page !== state.workspace;
+  for (const link of document.querySelectorAll("[data-workspace]")) {
+    if (link.dataset.workspace === state.workspace) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  }
+  $("workspace-name").textContent = name[state.workspace];
+  if (focus) {
+    $("main").focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
+}
+
+const renderGallery = mountGallery(state, {
+  choose: chooseGallery, upload: uploadGallery, review: reviewReference,
+  reviewAutomatic: reviewAutomaticReference, clear: clearGallery,
 });
-
-
-// Reference image selection
-function validateGalleryFiles(files) {
-    const supported = files.filter(file =>
-        SUPPORTED_GALLERY_EXTENSIONS.has(
-            file.name.slice(file.name.lastIndexOf(".")).toLowerCase()
-        )
-    );
-    const unsupported = files.filter(file => !supported.includes(file));
-    const identityFiles = new Map();
-    const duplicateIdentities = new Set();
-
-    for (const file of supported) {
-        const identity = file.name.slice(0, file.name.lastIndexOf(".")).trim();
-        const key = identity.toLocaleLowerCase();
-
-        if (identityFiles.has(key)) {
-            duplicateIdentities.add(identityFiles.get(key));
-            duplicateIdentities.add(identity);
-        } else {
-            identityFiles.set(key, identity);
-        }
-    }
-
-    return { supported, unsupported, duplicateIdentities };
-}
-
-function updateSelectedGalleryFiles(files) {
-    selectedGalleryFiles = files;
-    const validation = validateGalleryFiles(files);
-    const countLabel = `${validation.supported.length} supported image${
-        validation.supported.length === 1 ? "" : "s"
-    } selected`;
-    const names = files.map(file => file.name).join(" · ");
-
-    $("gallery-file-list").textContent = files.length
-        ? `${countLabel}${names ? ` · ${names}` : ""}`
-        : "";
-
-    const messages = [];
-    if (validation.unsupported.length) {
-        messages.push(
-            `Unsupported files will be skipped: ${validation.unsupported
-                .map(file => file.name).join(", ")}`
-        );
-    }
-    if (validation.duplicateIdentities.size) {
-        messages.push(
-            `Duplicate identity names: ${Array.from(
-                validation.duplicateIdentities
-            ).join(", ")}. Remove or rename duplicates before uploading.`
-        );
-    }
-
-    showMessage(
-        $("gallery-message"),
-        messages.join("\n"),
-        messages.length ? "error" : ""
-    );
-    $("upload-gallery").disabled =
-        validation.supported.length === 0 ||
-        validation.duplicateIdentities.size > 0;
-}
-
-$("gallery-files").addEventListener("change", (event) => {
-    updateSelectedGalleryFiles(Array.from(event.target.files || []));
-});
-
-$("gallery-folder").addEventListener("change", (event) => {
-    updateSelectedGalleryFiles(Array.from(event.target.files || []));
-});
-
-
-$("upload-gallery").addEventListener("click", async () => {
-    if (!selectedGalleryFiles.length) return;
-
-    const validation = validateGalleryFiles(selectedGalleryFiles);
-    if (!validation.supported.length || validation.duplicateIdentities.size) return;
-
-    const button = $("upload-gallery");
-    button.disabled = true;
-    button.textContent = "Processing photographs...";
-
-    try {
-        const formData = new FormData();
-
-        validation.supported.forEach(file => {
-            formData.append("files", file);
-        });
-
-        const data = await apiRequest("/gallery", {
-            method: "POST",
-            body: formData
-        });
-
-        updateGalleryUI(data);
-
-        let message = data.message;
-
-        if (validation.unsupported.length) {
-            message += "\nSkipped unsupported files: " +
-                validation.unsupported.map(file => file.name).join(", ");
-        }
-
-        if (data.gallery_errors?.length) {
-            message += "\n" + data.gallery_errors.join("\n");
-        }
-
-        const rejectedBuild = data.build_succeeded === false;
-        if (data.upload_summary) {
-            message += `\nAccepted ${data.upload_summary.accepted_references}; rejected ${data.upload_summary.rejected_references}; manual selection ${data.upload_summary.manual_selection_references}.`;
-        }
-        showMessage($("gallery-message"), message, rejectedBuild ? "error" : "success");
-
-        selectedGalleryFiles = [];
-        $("gallery-files").value = "";
-        $("gallery-folder").value = "";
-        $("gallery-file-list").textContent = "";
-
-    } catch (error) {
-        showMessage($("gallery-message"), error.message, "error");
-    } finally {
-        button.disabled = false;
-        button.textContent = "Build reference gallery";
-    }
-});
-
-
-// Manual reference selection
-function renderPending(pending) {
-    const container = $("pending-list");
-    container.replaceChildren();
-
-    pending.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "pending-card";
-
-        const title = document.createElement("strong");
-        title.textContent = item.identity;
-
-        const details = document.createElement("p");
-        details.textContent =
-            `${item.filename} · ${item.faces} faces detected`;
-
-        const preview = document.createElement("img");
-        preview.alt = `Numbered face preview for ${item.identity}`;
-        preview.loading = "lazy";
-
-        const actions = document.createElement("div");
-        actions.className = "pending-actions";
-
-        for (let i = 0; i < item.faces; i++) {
-            const button = document.createElement("button");
-            button.textContent = `Select face ${i}`;
-            button.addEventListener("click", () => {
-                selectPendingFace(item.pending_id, i);
-            });
-            actions.appendChild(button);
-        }
-
-        const skip = document.createElement("button");
-        skip.textContent = "Skip image";
-        skip.addEventListener("click", () => {
-            skipPending(item.pending_id);
-        });
-        actions.appendChild(skip);
-
-        card.append(title, details, preview, actions);
-        container.appendChild(card);
-
-        apiRequest(`/gallery/pending/${item.pending_id}`)
-            .then(data => {
-                preview.src = data.preview;
-            })
-            .catch(error => {
-                details.textContent += ` · ${error.message}`;
-            });
-    });
-}
-
-
-async function selectPendingFace(pendingId, faceIndex) {
-    try {
-        const data = await apiRequest("/gallery/select", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                pending_id: pendingId,
-                face_index: faceIndex
-            })
-        });
-
-        updateGalleryUI(data);
-
-        showMessage(
-            $("gallery-message"),
-            data.message,
-            "success"
-        );
-    } catch (error) {
-        showMessage($("gallery-message"), error.message, "error");
-    }
-}
-
-
-async function skipPending(pendingId) {
-    try {
-        const data = await apiRequest("/gallery/skip", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pending_id: pendingId })
-        });
-
-        updateGalleryUI(data);
-
-        showMessage(
-            $("gallery-message"),
-            data.message,
-            "success"
-        );
-    } catch (error) {
-        showMessage($("gallery-message"), error.message, "error");
-    }
-}
-
-
-// Clear gallery
-$("clear-gallery").addEventListener("click", async () => {
-    if (!confirm("Are you sure you want to clear the reference gallery?")) {
-        return;
-    }
-
-    try {
-        const data = await apiRequest("/gallery/clear", {
-            method: "POST"
-        });
-
-        selectedGroupFile = null;
-        $("group-file").value = "";
-        $("group-file-name").textContent = "";
-
-        $("results-section").hidden = true;
-        $("analyze-photo").disabled = true;
-
-        updateGalleryUI(data);
-
-        showMessage(
-            $("gallery-message"),
-            data.message,
-            "success"
-        );
-    } catch (error) {
-        showMessage($("gallery-message"), error.message, "error");
-    }
-});
-
-
-// Group photo selection
-$("group-file").addEventListener("change", (event) => {
-    selectedGroupFile = event.target.files?.[0] || null;
-
-    $("group-file-name").textContent =
-        selectedGroupFile ? selectedGroupFile.name : "";
-
-    $("analyze-photo").disabled =
-        !selectedGroupFile ||
-        Number($("people-count").textContent) === 0;
-});
-
-
-// Group photo recognition
-$("analyze-photo").addEventListener("click", async () => {
-    if (!selectedGroupFile) return;
-
-    const button = $("analyze-photo");
-    button.disabled = true;
-    button.textContent = "Analysing photograph...";
-
-    showMessage(
-        $("analysis-message"),
-        "Detecting and recognising faces..."
-    );
-
-    try {
-        const formData = new FormData();
-        formData.append("file", selectedGroupFile);
-
-        const data = await apiRequest("/analyze", {
-            method: "POST",
-            body: formData
-        });
-
-        $("face-total").textContent =
-            `${data.face_count} FACES`;
-
-        $("recognized-count").textContent =
-            data.summary.recognised;
-
-        $("possible-count").textContent =
-            data.summary.possible;
-
-        $("unknown-count").textContent =
-            data.summary.unknown;
-
-        $("annotated-image").src = data.annotated_image;
-
-        renderResults(data.results);
-
-        $("results-section").hidden = false;
-
-        showMessage(
-            $("analysis-message"),
-            data.message,
-            "success"
-        );
-
-    } catch (error) {
-        showMessage($("analysis-message"), error.message, "error");
-    } finally {
-        button.disabled = !selectedGroupFile ||
-            Number($("people-count").textContent) === 0;
-
-        button.textContent = "Analyse group photograph";
-    }
-});
-
-
-
-function renderResults(results) {
-    const container = $("result-list");
-    container.replaceChildren();
-
-    results.forEach(result => {
-        const item = document.createElement("div");
-        item.className = "result-item result-item-expanded";
-
-        const information = document.createElement("div");
-        information.className = "result-information";
-
-        const identity = document.createElement("strong");
-        identity.textContent = result.conflict_with
-            ? `Unconfirmed duplicate: ${result.identity || "Unknown person"}`
-            : result.identity || "Unknown person";
-
-        const details = document.createElement("small");
-        details.textContent =
-            `Face ${result.face_number} · Best similarity: ${
-                result.best_score != null
-                    ? (result.best_score * 100).toFixed(1) + "%"
-                    : "N/A"
-            }`;
-        if (result.conflict_with) {
-            details.textContent +=
-                ` · Same identity retained for face ${result.conflict_with}`;
-        }
-
-        information.append(identity, details);
-
-        const status = document.createElement("span");
-        status.className = `result-status ${result.status}`;
-        status.textContent = result.status.toUpperCase();
-
-        item.append(information, status);
-
-        // Display alternative candidates when available.
-        if (result.candidates?.length) {
-            const candidates = document.createElement("div");
-            candidates.className = "candidate-list";
-
-            const heading = document.createElement("small");
-            heading.textContent = "TOP MATCH CANDIDATES";
-            candidates.appendChild(heading);
-
-            result.candidates.forEach(candidate => {
-                const row = document.createElement("div");
-                row.className = "candidate-row";
-
-                const name = document.createElement("span");
-                name.textContent = candidate.name;
-
-                const score = document.createElement("span");
-                score.textContent =
-                    `${(candidate.score * 100).toFixed(1)}%`;
-
-                row.append(name, score);
-                candidates.appendChild(row);
-            });
-
-            item.appendChild(candidates);
-        }
-
-        container.appendChild(item);
-    });
-}
-
-
-// Initialize dashboard
-refreshStatus();
-apiRequest("/pipeline").then(data => {
-    $("pipeline-select").value = data.active_pipeline_id;
-    showMessage(
-        $("pipeline-message"),
-        `${data.active_pipeline_label} ready (${data.model_initialization_ms.toFixed(1)} ms initialization).`,
-        "success"
-    );
-}).catch(error => showMessage($("pipeline-message"), error.message, "error"));
+const renderAnalysis = mountAnalysis(state, { choose: choosePhoto, canAnalyze, run: runAnalysis });
+const renderSettings = mountSettings(state, switchPipeline);
+const renderDashboard = mountDashboard(state);
+for (const button of document.querySelectorAll("[data-refresh]")) button.addEventListener("click", refresh);
+window.addEventListener("hashchange", () => navigate(true));
+navigate();
+refresh();

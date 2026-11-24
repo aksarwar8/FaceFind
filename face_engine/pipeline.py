@@ -112,6 +112,8 @@ def recognize_image(image, gallery, detector, embedder, matcher):
                     if result["best_score"] >= matcher.possible_threshold
                     else "unknown"
                 )
+                if result["status"] == "unknown":
+                    result["identity"] = None
             result["conflict_with"] = retained["face_number"]
 
     return {

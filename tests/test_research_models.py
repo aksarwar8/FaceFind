@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock
 
 import numpy as np
 
@@ -21,6 +22,33 @@ class FakeSCRFDAdapter:
 
 
 class ResearchModelTests(unittest.TestCase):
+    def test_reference_keeps_primary_matches_without_retry(self):
+        detector = StridePaddedSCRFD.__new__(StridePaddedSCRFD)
+        detector.adapter = Mock(wraps=FakeSCRFDAdapter())
+        image = np.zeros((800, 1280, 3), dtype=np.uint8)
+        faces, trace = detector.detect_reference(image)
+        detector.adapter.detect.assert_called_once()
+        self.assertEqual(faces[0]["bbox"], [10.0, 20.0, 50.0, 60.0])
+        self.assertEqual(trace["pass"], "primary")
+        self.assertIsNone(trace["retry_ms"])
+
+    def test_reference_retry_pads_and_maps_ordered_landmarks_to_working_image(self):
+        detector = StridePaddedSCRFD.__new__(StridePaddedSCRFD)
+        retry = FakeSCRFDAdapter().detect(np.zeros((1, 1, 3), dtype=np.uint8))
+        # A primary box entirely in padding is clipped to zero area.
+        primary = [{**retry[0], "bbox": [0, 768, 20, 800]}]
+        detector.adapter = Mock()
+        detector.adapter.detect.side_effect = [primary, retry]
+        image = np.zeros((750, 1280, 3), dtype=np.uint8)
+        faces, trace = detector.detect_reference(image)
+        calls = detector.adapter.detect.call_args_list
+        self.assertEqual([call.args[0].shape[:2] for call in calls], [(768, 1280), (384, 640)])
+        self.assertTrue(np.all(calls[1].args[0][375:] == 0))
+        self.assertEqual(faces[0]["bbox"], [20.0, 40.0, 100.0, 120.0])
+        self.assertEqual(faces[0]["landmarks"], [value * 2 for value in retry[0]["landmarks"]])
+        self.assertEqual(trace["pass"], "retry_640")
+        self.assertGreaterEqual(trace["retry_ms"], 0.0)
+
     def test_scrfd_input_is_stride_padded_and_coordinates_are_xywh(self):
         detector = StridePaddedSCRFD.__new__(StridePaddedSCRFD)
         detector.adapter = FakeSCRFDAdapter()

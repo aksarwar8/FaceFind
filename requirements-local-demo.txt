@@ -1,0 +1,5 @@
+# One reproducible Python 3.11 environment for the FastAPI app and both local
+# inference pipelines. InsightFace is installed separately with --no-deps as
+# documented in README.md to avoid introducing opencv-python.
+-r requirements.txt
+-r requirements-research.txt

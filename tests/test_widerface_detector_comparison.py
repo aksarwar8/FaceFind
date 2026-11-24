@@ -155,7 +155,7 @@ class FailureCategoryTests(unittest.TestCase):
 
 class FixedManifestTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(dir=comparison.EVALUATION_OUTPUT_DIR)
+        self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.manifest_path = self.root / "manifest.json"
         self.image_root = self.root / "images"

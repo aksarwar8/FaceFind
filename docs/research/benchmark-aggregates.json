@@ -1,0 +1,230 @@
+{
+  "widerface_retinaface_full500_seed42": {
+    "images": 500,
+    "annotated_faces": 5615,
+    "iou_threshold": 0.5,
+    "official_ap": false,
+    "detectors": {
+      "yunet": {
+        "tp": 3338,
+        "fp": 987,
+        "fn": 2277,
+        "custom_metrics": {
+          "precision": 0.7717919075144508,
+          "recall": 0.5944790739091719,
+          "f1": 0.6716297786720322
+        },
+        "recall_by_face_height": {
+          "le_20_px": {
+            "ground_truth_faces": 2931,
+            "true_positives": 1154,
+            "false_negatives": 1777,
+            "recall": 0.3937222790856363
+          },
+          "gt_20_to_40_px": {
+            "ground_truth_faces": 1331,
+            "true_positives": 989,
+            "false_negatives": 342,
+            "recall": 0.7430503380916604
+          },
+          "gt_40_px": {
+            "ground_truth_faces": 1353,
+            "true_positives": 1195,
+            "false_negatives": 158,
+            "recall": 0.8832224685883222
+          }
+        },
+        "latency_ms": {
+          "count": 500,
+          "mean_ms": 99.7077987997327,
+          "median_ms": 92.64874999644235,
+          "p95_ms": 171.5478799960692
+        }
+      },
+      "scrfd_10g_kps": {
+        "tp": 3519,
+        "fp": 163,
+        "fn": 2096,
+        "custom_metrics": {
+          "precision": 0.9557305812058664,
+          "recall": 0.6267141585040071,
+          "f1": 0.7570183930300096
+        },
+        "recall_by_face_height": {
+          "le_20_px": {
+            "ground_truth_faces": 2931,
+            "true_positives": 1287,
+            "false_negatives": 1644,
+            "recall": 0.4390992835209826
+          },
+          "gt_20_to_40_px": {
+            "ground_truth_faces": 1331,
+            "true_positives": 1016,
+            "false_negatives": 315,
+            "recall": 0.763335837716003
+          },
+          "gt_40_px": {
+            "ground_truth_faces": 1353,
+            "true_positives": 1216,
+            "false_negatives": 137,
+            "recall": 0.8987435328898744
+          }
+        },
+        "latency_ms": {
+          "count": 500,
+          "mean_ms": 526.1399519988336,
+          "median_ms": 483.75435000343714,
+          "p95_ms": 891.797444986878
+        }
+      },
+      "retinaface_mobilenet025": {
+        "tp": 1881,
+        "fp": 407,
+        "fn": 3734,
+        "custom_metrics": {
+          "precision": 0.8221153846153846,
+          "recall": 0.33499554764024936,
+          "f1": 0.47602176388713147
+        },
+        "recall_by_face_height": {
+          "le_20_px": {
+            "ground_truth_faces": 2931,
+            "true_positives": 114,
+            "false_negatives": 2817,
+            "recall": 0.038894575230296824
+          },
+          "gt_20_to_40_px": {
+            "ground_truth_faces": 1331,
+            "true_positives": 608,
+            "false_negatives": 723,
+            "recall": 0.4567993989481593
+          },
+          "gt_40_px": {
+            "ground_truth_faces": 1353,
+            "true_positives": 1159,
+            "false_negatives": 194,
+            "recall": 0.8566149297856614
+          }
+        },
+        "latency_ms": {
+          "count": 500,
+          "mean_ms": 106.593494000379,
+          "median_ms": 94.05105000769254,
+          "p95_ms": 185.95733497641027
+        }
+      }
+    }
+  },
+  "final_app_performance_20261124_01": {
+    "protocol": "Loopback HTTP against FastAPI, one genuine unannotated group photo",
+    "identity_accuracy_assessed": false,
+    "pipelines": {
+      "scrfd_adaface": {
+        "inputs": 52,
+        "enrolled": 50,
+        "rejected": 2,
+        "manual_selections_in_enrolled": 11,
+        "warm_requests": 5,
+        "detections": 14,
+        "assigned_identities": 8,
+        "api_latency_ms": {
+          "count": 5,
+          "mean_ms": 1257.4384999927133,
+          "median_ms": 1222.3165000032168,
+          "p95_ms": 1340.306159981992,
+          "max_ms": 1343.3842999802437
+        },
+        "backend_latency_ms": {
+          "count": 5,
+          "mean_ms": 1151.9499999994878,
+          "median_ms": 1159.647299995413,
+          "p95_ms": 1226.0104199929629,
+          "max_ms": 1239.3042999901809
+        }
+      },
+      "yunet_sface": {
+        "inputs": 52,
+        "enrolled": 52,
+        "rejected": 0,
+        "manual_selections_in_enrolled": 10,
+        "warm_requests": 5,
+        "detections": 13,
+        "assigned_identities": 6,
+        "api_latency_ms": {
+          "count": 5,
+          "mean_ms": 552.7114600059576,
+          "median_ms": 551.5515000151936,
+          "p95_ms": 581.1537399888039,
+          "max_ms": 582.1129999822006
+        },
+        "backend_latency_ms": {
+          "count": 5,
+          "mean_ms": 462.5995399954263,
+          "median_ms": 451.8648999801371,
+          "p95_ms": 501.8729199829977,
+          "max_ms": 505.31719997525215
+        }
+      }
+    }
+  },
+  "reference_adaptation": {
+    "primary_coverage": {
+      "detected": 14,
+      "total": 17
+    },
+    "adaptive_coverage": {
+      "detected": 17,
+      "total": 17
+    },
+    "original_retry_latency": {
+      "attempts": 3,
+      "min_ms": 181.27599998842925,
+      "median_ms": 228.83970002294518,
+      "mean_ms": 237.98659999738447,
+      "max_ms": 303.844099980779,
+      "total_ms": 713.9597999921534
+    },
+    "additional_retry_latency": {
+      "attempts": 11,
+      "min_ms": 151.10529999947175,
+      "median_ms": 203.8196999928914,
+      "mean_ms": 219.9300909097391,
+      "max_ms": 363.30830000224523,
+      "total_ms": 2419.23100000713
+    }
+  },
+  "reference_wall_candidate": {
+    "scrfd_scores": [
+      0.8285508155822754,
+      0.5329649448394775
+    ],
+    "yuNet_face_score": 0.913797914981842,
+    "iou": 0.0
+  },
+  "smart_reference_policy": {
+    "original_strict_reviews": 3,
+    "original_smart_reviews": 1,
+    "smaller_target_stress": {
+      "photos": 6,
+      "wrong_autoselections": 3
+    }
+  },
+  "release_http_20261124": {
+    "references": 52,
+    "accepted_before_manual": 43,
+    "automatic_selections": 2,
+    "manual_confirmations": 9,
+    "rejected": 0,
+    "final_enrolled": 52,
+    "gallery_upload_ms": 11959.048099990468,
+    "analysis_first_ms": 1388.199800014263,
+    "analysis_repeat_ms": 1463.188399997307,
+    "analysis_counts": {
+      "recognised": 8,
+      "possible": 0,
+      "unknown": 6,
+      "errors": 0
+    },
+    "identity_accuracy_assessed": false
+  }
+}

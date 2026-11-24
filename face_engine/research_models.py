@@ -21,6 +21,7 @@ ADAFACE_MODEL = ROOT / "data/private/models/adaface_ir_18_webface4m_yakhyo.onnx"
 SCRFD_SCORE_THRESHOLD = 0.5
 SCRFD_NMS_THRESHOLD = 0.4
 SCRFD_MAX_DIMENSION = 1280
+SCRFD_REFERENCE_RETRY_DIMENSION = 640
 # Independently calibrated on 50-way group-photo gallery identities in the
 # disjoint end-to-end calibration cohort.
 ADAFACE_SIMILARITY_THRESHOLD = 0.26362
@@ -33,6 +34,8 @@ ALIGN_DST = np.array([[38.2946, 51.6963], [73.5318, 51.5014],
 class StridePaddedSCRFD:
     """Reuse the evaluated SCRFD KPS adapter with stride-32 input padding."""
     def __init__(self):
+        if not SCRFD_MODEL.is_file():
+            raise FileNotFoundError(f"SCRFD checkpoint not found: {SCRFD_MODEL}")
         import sys
         scripts = str(ROOT / "scripts")
         if scripts not in sys.path:
@@ -46,10 +49,30 @@ class StridePaddedSCRFD:
         )
 
     def detect(self, image):
+        return self._detect_at_scale(image, SCRFD_MAX_DIMENSION)
+
+    def detect_reference(self, image):
+        """Retry empty gallery detections at half scale, retaining source coordinates."""
+        started = time.perf_counter()
+        faces = [face for face in self.detect(image) if min(face["bbox"][2:]) > 0]
+        primary_ms = (time.perf_counter() - started) * 1000
+        if faces:
+            return faces, {"pass": "primary", "primary_ms": primary_ms, "retry_ms": None}
+
+        started = time.perf_counter()
+        retry = self._detect_at_scale(image, SCRFD_REFERENCE_RETRY_DIMENSION)
+        faces = [face for face in retry if min(face["bbox"][2:]) > 0]
+        return faces, {
+            "pass": "retry_640",
+            "primary_ms": primary_ms,
+            "retry_ms": (time.perf_counter() - started) * 1000,
+        }
+
+    def _detect_at_scale(self, image, max_dimension):
         if image is None or image.size == 0:
             raise ValueError("Invalid input image")
         original_height, original_width = image.shape[:2]
-        scale = min(SCRFD_MAX_DIMENSION / max(original_width, original_height), 1.0)
+        scale = min(max_dimension / max(original_width, original_height), 1.0)
         if scale < 1.0:
             width, height = int(original_width * scale), int(original_height * scale)
             work = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
@@ -98,8 +121,8 @@ class AdaFaceEmbedder:
     def get_embedding(self, image, detection):
         started = time.perf_counter()
         points = np.asarray(detection["landmarks"], dtype=np.float32).reshape(5, 2)
-        transform = SimilarityTransform()
-        if not transform.estimate(points, ALIGN_DST):
+        transform = SimilarityTransform.from_estimate(points, ALIGN_DST)
+        if not transform:
             raise ValueError("AdaFace five-point alignment failed")
         matrix = transform.params[:2, :].astype(np.float32)
         if not np.isfinite(matrix).all():
