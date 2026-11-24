@@ -14,14 +14,6 @@
 
 The application release is [`9734b203f524670b695e85b0ea2088f4c6794517`](https://github.com/aksarwar8/FaceFind/commit/9734b203f524670b695e85b0ea2088f4c6794517). Any later documentation revisions refer to that frozen implementation unless explicitly stated.
 
-## Application Demo
-
-[![Watch the 28-second FaceFind application demo](docs/screenshots/demo-thumbnail.png)](https://github.com/aksarwar8/FaceFind/releases/download/demo-v1.0/facefind-demo.mp4)
-
-**[Watch Application Demo (0:28)](https://github.com/aksarwar8/FaceFind/releases/download/demo-v1.0/facefind-demo.mp4)**
-
-This privacy-edited walkthrough shows reference-folder enrollment, group-photo recognition and Unknown results, and how Evaluation Studio withholds metrics until ground truth is supplied. It closes with a screenshot from the separate disconnected-network startup test. Photographs, identity labels, file dialogs and the original audio are excluded.
-
 ## Application preview
 
 | Workspace | What you can inspect |
