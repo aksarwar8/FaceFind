@@ -102,3 +102,36 @@ This sequence is a supplementary diagram. The standalone [Archify export](docs/a
 Each pending or automatically enrolled review item has an opaque immutable ID in its model-specific gallery cache. Queue position can change without altering this ID. Pending selection and skip resolve the ID in the active cache and return HTTP 409 if it is stale. Automatic correction also checks the embedding revision. Skipping an item does not change the embedding revision or invalidate existing analysis. Selecting a pending face or correcting the selected face changes the embedding revision.
 
 The annotation renderer retains detector box coordinates and uses Pillow to draw locally shaped labels. Unsupported or oversized names fall back to face numbers backed by the structured results. API image previews, thumbnails, review crops and analyzed JPEG responses carry `Cache-Control: no-store`.
+
+## Evaluation Studio
+
+The Analyze endpoint includes additive provenance fields for the completed result. These are a unique analysis ID, a streamed SHA-256 of the uploaded image, source geometry including EXIF orientation, the gallery identity snapshot, and the matcher's active thresholds and margins. The pipeline still receives only the image, gallery and model configuration.
+
+The browser freezes a copy of the completed response and stores the current photo preview separately. Ground-truth files are read and validated in the browser. They are never uploaded or sent to the detection or recognition pipeline. Imported annotations, manual labels, and reports are scoped to the analysis ID, gallery revision and pipeline. Changes to any of these invalidate evaluation. Browser reload clears unsaved work.
+
+### Input schemas and coordinate handling
+
+| Format | Fields |
+|---|---|
+| Canonical CSV | `image_filename` or `image_sha256`, `face_id`, `actual_identity`, optional `status`, and `bbox_x`, `bbox_y`, `bbox_width`, `bbox_height` |
+| Canonical JSON | A face array or an object with a `faces` array. Use the same fields, or use `bbox: [x, y, width, height]`. `image_id` can carry the SHA-256. |
+| Local demo CSV | `group`, `face_number`, `source_identity`, `status` and the four `bbox_*` fields. The importer does not use `expected_label` to decide membership. |
+| Local demo JSON | Uses the `faces` array plus `groups[].image`, `sha256`, `canvas_width`, `canvas_height`, and the expected face count. Imported composite boxes are marked approximate. |
+
+Use basenames without directories. Exact file hashes are checked where supplied. Filename-only annotations require the evaluator to confirm the file corresponds to the analyzed photograph. Matching uses a case-insensitive basename and rejects ambiguous associations. Use `image_width` and `image_height` together if the coordinates are on a resized canvas. `coordinate_space` defaults to `oriented`, meaning the original image after EXIF orientation. Use `raw` for pre-orientation coordinates or `working` for the analysis image. The importer transforms box corners then maps the result to analysis pixels. The photo preview overlays use normalized coordinates. Ground-truth files are capped at 2 MiB and IoU assignment at 256 predictions and 256 actual faces per image. Missing or unreliable boxes require manual one-to-one correspondence. Mark a box unreliable using `box_reliable=false`.
+
+### Matching and metrics
+
+Imported boxes match predictions one-to-one at IoU >= 0.50. Assignment maximizes the number of valid matches, then total IoU, using deterministic prediction order and sorted annotation IDs for ties. TP counts matched detections, FP counts extra detections, and FN counts missed annotations. Detection precision is TP/(TP+FP), recall is TP/(TP+FN), and F1 is 2TP/(2TP+FP+FN). Complete manual reviews use the same counts from explicit correspondence without IoU.
+
+| Metric | Numerator | Denominator |
+|---|---|---|
+| End-to-end known identification | Correct enrolled identity assignments | All annotated known faces |
+| End-to-end unknown rejection | Unenrolled faces with no confirmed assignment | All annotated unknown faces |
+| End-to-end false acceptance | Unenrolled faces assigned an enrolled identity | All annotated unknown faces |
+| End-to-end known identification failure | Known faces with any unsuccessful outcome | All annotated known faces |
+| Overall correct outcome | Correct known IDs plus correct unknown rejections | All annotated faces |
+| Conditional known identification | Correct enrolled identity assignments | Matched known faces with valid recognition outcomes |
+| Conditional unknown rejection | Correct rejections | Matched unknown faces with valid recognition outcomes |
+
+A zero denominator is N/A. A missed face or processing failure is unsuccessful end to end and outside the conditional denominator. A Possible prediction is tentative and scored as unassigned. An accepted label on an extra detection is visible in its row and does not enter person-level false acceptance. Partial manual recognition denominators describe only verified labels and marked misses. JSON and CSV expose provenance, raw prediction status, outcome, scores, coordinates and metric numerators and denominators. The JPEG labels evaluation outcomes separately from the normal recognition image.

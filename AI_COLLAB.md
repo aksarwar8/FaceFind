@@ -63,3 +63,7 @@ The owner set the problem, selected the development and comparison scope, direct
 ## Final independent review follow-up
 
 The human-directed hardening request identified three concrete release issues: affected upload dependencies, stale review actions that could target a different photo with the same identity stem, and distinct Unicode names that could render identically. The implementation updates the upload stack against published advisories, separates review-item identity from embedding revision, and uses local font rendering with an explicit face-number fallback. The verification report records the regressions and the clean-install checks. The original review conversation export still needs to be supplied and sanitized as described above. [Release verification](docs/verification/RELEASE.md).
+
+## Why Evaluation Studio was added
+
+During manual testing, the developer directed that FaceFind distinguish inference counts from correctness. The question was how many predictions were actually correct when recognized and unrecognized totals alone could not answer it. The implementation keeps prediction generation independent and asks the evaluator to supply manual ground truth or import external annotations. It records the gallery and analysis version, identifies uncertainty and partial reviews, and reports measured outcomes with their denominators. The original request in the project conversation supports the decision. No model or threshold was changed for the demo.

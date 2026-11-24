@@ -215,3 +215,18 @@ The detector protocol is custom and the YOLO comparison partial. LFW is a differ
 - Detection: [WIDER FACE](https://shuoyang1213.me/WIDERFACE/), [SCRFD paper](https://arxiv.org/abs/2105.04714), [RetinaFace paper](https://arxiv.org/abs/1905.00641), [OpenCV Zoo YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet).
 - Recognition: [SFace paper](https://arxiv.org/abs/2205.12010), [ArcFace paper](https://arxiv.org/abs/1801.07698), [AdaFace paper](https://arxiv.org/abs/2204.00964), [LFW paper](https://people.cs.umass.edu/~elm/papers/Huang_eccv2008-lfw.pdf).
 - Checkpoints and rights: [InsightFace licensing](https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md), [SFace distribution](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface), [AdaFace ONNX release](https://github.com/yakhyo/adaface-onnx/releases/tag/weights).
+
+## Evaluation Studio demonstration
+
+This controlled local run used the 60-identity LFW manual-demo gallery and five held-out synthetic composites. It used the current SCRFD + AdaFace configuration with the existing similarity threshold and margin. Strict reference review yielded 57 automatic enrollments and three confirmations. The selected crops were checked visually before interpreting the results. The CSV and JSON agreed on 57 source identities, membership flags and box coordinates. The five answer-key JPEGs were checked at the annotated locations, and the manifest SHA-256 values matched the analyzed files.
+
+| Composite | Known / unknown | TP / FP / FN | Correct known | Known rejected | Correct unknown | False acceptances | Overall correct |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Easy | 7 / 3 | 10 / 0 / 0 | 6 / 7 | 1 | 3 / 3 | 0 | 9 / 10 |
+| Medium | 8 / 4 | 12 / 0 / 0 | 8 / 8 | 0 | 4 / 4 | 0 | 12 / 12 |
+| Hard | 10 / 5 | 15 / 0 / 0 | 10 / 10 | 0 | 5 / 5 | 0 | 15 / 15 |
+| All Unknown | 0 / 10 | 10 / 0 / 0 | N/A | 0 | 10 / 10 | 0 | 10 / 10 |
+| All Known | 10 / 0 | 10 / 0 / 0 | 10 / 10 | 0 | N/A | 0 | 10 / 10 |
+| **Combined counts** | **35 / 22** | **57 / 0 / 0** | **34 / 35** | **1** | **22 / 22** | **0** | **56 / 57** |
+
+There were no wrong known assignments or processing failures in this run. Conditional and end-to-end recognition denominators coincide because every annotated face was matched and processed. These are five purpose-built composites with approximate source-box estimates and one local gallery. They cannot establish accuracy on genuine group photographs, resistance to distribution shift, or lack of overlap with training data. These results are separate from the earlier benchmark protocols. No thresholds were tuned. [Protocol and metric definitions](ARCHITECTURE.md#evaluation-studio).

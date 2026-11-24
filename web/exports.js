@@ -1,4 +1,4 @@
-function csvCell(value) {
+export function csvCell(value) {
   const text = String(value ?? "");
   const dangerous = typeof value === "string" && /^[\s\uFEFF\u200B]*[=+\-@\t\r\n＝＋－＠]/u.test(text);
   return '"' + (dangerous ? "'" + text : text).replaceAll('"', '""') + '"';
@@ -17,13 +17,19 @@ export function recognitionCsv(results) {
   return [header, ...rows].map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
 
-function download(url, filename) {
+export function download(url, filename) {
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   document.body.append(link);
   link.click();
   link.remove();
+}
+
+export function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  download(url, filename);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function exportAnalysis(analysis, format) {

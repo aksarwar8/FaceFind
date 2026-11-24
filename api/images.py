@@ -75,7 +75,7 @@ def _target(size, pixels, edge):
     return max(1, int(width * scale)), max(1, int(height * scale))
 
 
-def decode_image(upload, *, pixels=MAX_WORKING_PIXELS, edge=MAX_WORKING_EDGE):
+def decode_image(upload, *, pixels=MAX_WORKING_PIXELS, edge=MAX_WORKING_EDGE, geometry=None):
     """Read the spooled file directly and return a contiguous uint8 RGB array."""
     file = upload.file
     size = upload.size
@@ -90,10 +90,15 @@ def decode_image(upload, *, pixels=MAX_WORKING_PIXELS, edge=MAX_WORKING_EDGE):
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
             with Image.open(file, formats=FORMATS) as image:
+                original_size, source_format = image.size, image.format
                 if math.prod(image.size) > MAX_SOURCE_PIXELS:
                     raise ImageInputError("Image exceeds the 48-megapixel decode limit", 413)
                 if min(image.size) < 2 or max(image.size) > 1280 * min(image.size):
                     raise ImageInputError("Image dimensions are too small or too narrow for face detection")
+                original_orientation = image.getexif().get(274, 1) if geometry is not None and source_format == "TIFF" else None
+                if original_orientation is not None:
+                    # Pillow exposes an already oriented TIFF size; read the raw IFD dimensions.
+                    original_size = (int(image.tag_v2[256]), int(image.tag_v2[257]))
 
                 # JPEG can decode at a reduced size without allocating the full raster.
                 if image.format == "JPEG":
@@ -119,6 +124,11 @@ def decode_image(upload, *, pixels=MAX_WORKING_PIXELS, edge=MAX_WORKING_EDGE):
                     image = image.resize(target, Image.Resampling.LANCZOS, reducing_gap=2.0)
                 if orientation in ORIENTATION:
                     image = image.transpose(ORIENTATION[orientation])
+                if geometry is not None:
+                    # TIFF loaders may already have applied orientation during load.
+                    source_orientation = orientation if original_orientation is None else original_orientation
+                    geometry.update(original_width=original_size[0], original_height=original_size[1],
+                                    orientation=source_orientation if source_orientation in ORIENTATION else 1)
                 return np.array(image.convert("RGB") if image.mode != "RGB" else image)
     except (Image.DecompressionBombError, Image.DecompressionBombWarning) as error:
         raise ImageInputError("Image dimensions exceed safe decode limits", 413) from error

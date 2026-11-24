@@ -12,7 +12,7 @@ export function enrolledRows(status) {
 
 export function identityRows({ status }) {
   const pending = (status?.pending ?? []).map(item => ({
-    name: item.identity, status: "pending", label: `${item.faces} detected faces`,
+    name: item.identity, status: "pending", label: `${item.faces} detected faces`, pending: item,
   }));
   const rejected = (status?.gallery_build_errors ?? []).map(error => {
     const separator = error.indexOf(": ");
@@ -39,12 +39,21 @@ export function referencePortrait(item) {
   return portrait;
 }
 
-function referenceCard(item, automatic, openReview) {
-  const card = el("article", null, `identity identity-${item.status}`);
-  const body = el("div", null, "identity-label");
+function referenceCard(item, automatic, openReview, openPendingReview, activePendingId) {
+  const card = el(item.pending ? "button" : "article", null, `identity identity-${item.status}`);
+  const body = el(item.pending ? "span" : "div", null, "identity-label");
   body.append(el("strong", item.name), el("small", item.label));
   if (item.status === "accepted") card.append(referencePortrait(item));
   card.append(body);
+  if (item.pending) {
+    card.type = "button";
+    card.dataset.pendingId = item.pending.pending_id;
+    card.setAttribute("aria-label", `Review ${item.name}, ${item.label}`);
+    card.setAttribute("aria-controls", "pending-section");
+    card.setAttribute("aria-pressed", String(item.pending.pending_id === activePendingId));
+    card.addEventListener("click", () => openPendingReview(item.pending.pending_id));
+    return card;
+  }
   if (automatic) {
     const label = automatic.selected_face_index === automatic.automatic_selection.selected_face_index
       ? "Review automatic selection" : "Review face selection";
@@ -58,10 +67,10 @@ function referenceCard(item, automatic, openReview) {
 
 export function mountGallery(state, actions) {
   let rows = [];
-  let previousStatus, previousUpload, pendingKey, review;
+  let previousStatus, previousUpload, review;
+  let activePendingId, activePipeline;
+  let previousPending = [];
   let automaticReview, automaticRevision;
-  let queueTotal = 0;
-  let queuePosition = 0;
 
   function renderRows() {
     const query = $("identity-search").value.trim().toLocaleLowerCase();
@@ -78,7 +87,8 @@ export function mountGallery(state, actions) {
       const title = el("h3", label);
       title.append(el("span", group.length, "tag"));
       const grid = el("div", null, key === "accepted" ? "identity-grid" : "reference-list");
-      grid.append(...group.map(item => referenceCard(item, automatic.get(item.name), openAutomaticReview)));
+      grid.append(...group.map(item => referenceCard(item, automatic.get(item.name), openAutomaticReview,
+        openPendingReview, activePendingId)));
       section.append(title, grid);
       container.append(section);
     }
@@ -126,7 +136,7 @@ export function mountGallery(state, actions) {
     }, () => {
       closeAutomaticReview();
       $("identity-search").focus();
-    });
+    }, actions.refresh);
     $("automatic-item").replaceChildren(automaticReview.element);
     const section = $("automatic-section");
     section.hidden = false;
@@ -136,15 +146,61 @@ export function mountGallery(state, actions) {
 
   function renderPending(item) {
     review?.dispose();
-    review = item ? createReferenceReview(item, actions.review) : null;
+    review = item ? createReferenceReview(item, actions.review, null, actions.refresh) : null;
     $("pending-item").replaceChildren(...(review ? [review.element] : []));
     updateReviewControls();
+  }
+
+  function openPendingReview(id) {
+    const item = state.status?.pending.find(reference => reference.pending_id === id);
+    if (!item) return;
+    if (id !== activePendingId) {
+      activePendingId = id;
+      renderPending(item);
+      for (const card of $("identity-grid").querySelectorAll("button[data-pending-id]")) {
+        card.setAttribute("aria-pressed", String(card.dataset.pendingId === id));
+      }
+      updatePendingPosition(state.status.pending);
+    }
+    focusPendingReview();
+  }
+
+  function focusPendingReview() {
+    const section = $("pending-section");
+    section.tabIndex = -1;
+    section.focus();
+  }
+
+  function updatePendingPosition(pending) {
+    const index = pending.findIndex(item => item.pending_id === activePendingId);
+    $("pending-position").textContent = index < 0 ? "" : `Reference ${index + 1} of ${pending.length} pending`;
   }
 
   function render() {
     const { status, operation, galleryFiles, galleryUpload } = state;
     if (automaticReview && automaticRevision !== status?.gallery_revision) closeAutomaticReview();
     const pending = status?.pending ?? [];
+    const pipeline = status?.active_pipeline_id;
+    const samePipeline = pipeline === activePipeline;
+    const previousId = activePendingId;
+    const previousIndex = previousPending.findIndex(item => item.pending_id === previousId);
+    const reviewed = samePipeline && operation?.kind === "review" && previousIndex >= 0
+      && !pending.some(item => item.pending_id === previousId);
+    const nextIndex = reviewed && pending.length ? previousIndex % pending.length : 0;
+    const next = (samePipeline && pending.find(item => item.pending_id === previousId))
+      || pending[nextIndex];
+    activePendingId = next?.pending_id;
+    activePipeline = pipeline;
+    previousPending = pending;
+    $("pending-section").hidden = !pending.length;
+    if (!samePipeline || previousId !== activePendingId) {
+      renderPending(next);
+      if (reviewed && state.workspace === "gallery") {
+        if (next) focusPendingReview();
+        else $("identity-search").focus();
+      }
+    }
+    updatePendingPosition(pending);
     const canEnroll = state.connected && status?.engine_initialized && !operation;
     $("choose-folder").disabled = $("choose-references").disabled = !canEnroll;
     $("upload-gallery").disabled = !canEnroll || !galleryFiles.length;
@@ -172,25 +228,6 @@ export function mountGallery(state, actions) {
       previousUpload = galleryUpload;
     }
 
-    const key = pending.length ? JSON.stringify([status.active_pipeline_id, pending[0].pending_id, pending.length]) : null;
-    $("pending-section").hidden = !pending.length;
-    if (key !== pendingKey) {
-      if (state.operation?.kind === "review" && pending.length) {
-        queuePosition++;
-      } else {
-        queueTotal = pending.length;
-        queuePosition = 1;
-      }
-      const justReviewed = state.operation?.kind === "review" && state.workspace === "gallery";
-      renderPending(pending[0]);
-      pendingKey = key;
-      if (justReviewed) {
-        const target = pending.length ? $("pending-section") : $("identity-search");
-        target.tabIndex = pending.length ? -1 : 0;
-        target.focus();
-      }
-    }
-    $("pending-position").textContent = `Item ${queuePosition} of ${queueTotal} · ${pending.length} remaining`;
     updateReviewControls();
   }
 

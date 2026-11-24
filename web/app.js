@@ -2,6 +2,7 @@ import { post, request, validStatus } from "./api.js";
 import { mountGallery } from "./gallery.js";
 import { mountAnalysis, validateAnalysis } from "./analysis.js";
 import { mountDashboard } from "./dashboard.js";
+import { mountEvaluation } from "./evaluation.js";
 import { mountSettings, referenceSelectionPolicy } from "./settings.js";
 import { $, notice, busyNotice, setStatus } from "./ui.js";
 
@@ -46,6 +47,7 @@ function render() {
   for (const button of document.querySelectorAll("[data-refresh]")) button.disabled = Boolean(operation);
   renderGallery();
   renderAnalysis();
+  renderEvaluation();
   renderSettings();
 }
 
@@ -242,7 +244,7 @@ function switchPipeline(id) {
 function navigate(focus = false) {
   const target = location.hash.slice(1);
   if (target === "main") return;
-  const name = { dashboard: "Dashboard", gallery: "Gallery", analyze: "Analyze" };
+  const name = { dashboard: "Dashboard", gallery: "Gallery", analyze: "Analyze", evaluation: "Evaluation" };
   state.workspace = Object.hasOwn(name, target) ? target : "dashboard";
   for (const page of Object.keys(name)) $(`workspace-${page}`).hidden = page !== state.workspace;
   for (const link of document.querySelectorAll("[data-workspace]")) {
@@ -258,11 +260,12 @@ function navigate(focus = false) {
 
 const renderGallery = mountGallery(state, {
   choose: chooseGallery, upload: uploadGallery, review: reviewReference,
-  reviewAutomatic: reviewAutomaticReference, clear: clearGallery,
+  reviewAutomatic: reviewAutomaticReference, clear: clearGallery, refresh,
 });
 const renderAnalysis = mountAnalysis(state, { choose: choosePhoto, canAnalyze, run: runAnalysis });
 const renderSettings = mountSettings(state, switchPipeline);
 const renderDashboard = mountDashboard(state);
+const renderEvaluation = mountEvaluation(state);
 for (const button of document.querySelectorAll("[data-refresh]")) button.addEventListener("click", refresh);
 window.addEventListener("hashchange", () => navigate(true));
 navigate();

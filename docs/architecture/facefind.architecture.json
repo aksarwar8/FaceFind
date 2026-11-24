@@ -15,7 +15,7 @@
       "id": "browser",
       "type": "frontend",
       "label": "Desktop browser",
-      "sublabel": "Dashboard · Gallery · Analyze"
+      "sublabel": "Dashboard / Gallery / Analyze"
     },
     {
       "id": "api",
@@ -40,6 +40,12 @@
       "type": "database",
       "label": "Process memory",
       "sublabel": "Gallery and immutable review IDs"
+    },
+    {
+      "id": "evaluation",
+      "type": "frontend",
+      "label": "Evaluation Studio",
+      "sublabel": "Frozen predictions and independent ground truth"
     }
   ],
   "connections": [
@@ -67,6 +73,12 @@
       "from": "api",
       "to": "gallery",
       "label": "Enroll / reuse gallery"
+    },
+    {
+      "id": "evaluation-input",
+      "from": "browser",
+      "to": "evaluation",
+      "label": "Completed analysis snapshot"
     }
   ],
   "cards": [
@@ -97,6 +109,16 @@
         "SCRFD + AdaFace is the preferred research configuration",
         "YuNet + SFace is the automatic fallback when available",
         "Switching restores only the selected pipeline’s cached gallery"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Independent evaluation",
+      "items": [
+        "Manual correspondence or local CSV and JSON import",
+        "Gallery membership is resolved against the frozen snapshot",
+        "One-to-one IoU matching and separate detection and recognition metrics",
+        "Evaluation reports never feed back into inference"
       ]
     }
   ]

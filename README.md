@@ -128,7 +128,7 @@ Inference and browser API traffic stay on the local machine when launched on loo
 
 ~~~powershell
 python -m pytest -q tests scripts/evaluation -rs
-node --experimental-default-type=module --test tests/test_desktop_frontend.mjs
+node --experimental-default-type=module --test tests/*.mjs
 ~~~
 
 Run the full Python suite with the optional research dependencies installed. The suite does not download checkpoints or repeat model benchmarks. On **November 24, 2026**, Python 3.11.9 returned **95 passed, 2 skipped**. Both skips required Windows directory-symlink privileges. Node 22.17.1 returned **6 passed**. See the [release report](docs/verification/RELEASE.md) for clean-install HTTP results and the remaining browser checks.
@@ -144,3 +144,15 @@ The research checkpoints have unresolved or restricted rights. The detector resu
 ### Annotation and preview privacy
 
 JPEG labels use a locally installed font. Set `FACEFIND_ANNOTATION_FONT` to a trusted local TrueType or OpenType font to override the default search. Bengali and Hindi labels require glyph coverage and Pillow's RAQM shaping support. FaceFind uses numbered labels when the local renderer cannot display a name or fit it on the photo. The structured results and CSV retain the Unicode identity. No fonts are downloaded or distributed by FaceFind. API previews and annotated recognition responses send `Cache-Control: no-store`. Local downloads are saved where the browser or user chooses.
+
+## Evaluation Studio
+
+Analyze a photo as usual, then select **Evaluate results**. Inference counts say what the model returned. Evaluation measures how those outcomes compare with independent annotations.
+
+- **Manual review** lets you select a face, enter an enrolled identity, mark somebody as not enrolled, or mark a false detection. Use **Mark a missed face** to enter a box in working-image pixels. Confirm that you inspected the entire photo to report complete metrics. Before then, the numbers describe the verified subset.
+- **Import CSV or JSON** accepts the local manual demo CSV and JSON manifest, plus the canonical format provided by **CSV template**. Use independently annotated faces. The gallery snapshot determines whether a name is enrolled.
+- Filter and inspect results in the photo and list. Download separate evaluation JSON, CSV or JPEG reports. The Dashboard shows only the current evaluation.
+
+The SCRFD + AdaFace demo enrolled 60 identities and analyzed five synthetic composites with approximate annotations. It matched all 57 face boxes and obtained 56/57 correct outcomes, including 34/35 known identifications and 22/22 unknown rejections. These results describe the synthetic cohort only.
+
+[Evaluation schemas and metric definitions](ARCHITECTURE.md#evaluation-studio) and [synthetic demo results](RESEARCH.md#evaluation-studio-demonstration) describe the protocols and their limits.

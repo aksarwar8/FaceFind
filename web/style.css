@@ -147,6 +147,9 @@ progress { width: 44px; height: 12px; flex: none; margin-top: 5px; accent-color:
 .gallery-preview .reference-portrait { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-small); }
 .identity-accepted small { color: #86efac; }
 .identity-pending small { color: #fcd34d; }
+button.identity-pending { padding: 0; text-align: left; }
+button.identity-pending .identity-label { display: block; }
+button.identity-pending[aria-pressed=true] { border-color: var(--accent-text); background: #182e53; }
 .identity-rejected small { color: var(--error-text); }
 .pending-body { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--space-4); }
 .pending-viewer { height: clamp(300px, 56vh, 520px); overflow: auto; overscroll-behavior: contain; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-small); }
@@ -232,3 +235,32 @@ fieldset { border: 1px solid var(--border); border-radius: var(--radius-small); 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; }
 }
+
+/* Evaluation uses the same cards, type and color tokens as Analyze. */
+#evaluation-content, .evaluation-panels, #evaluation-report { display: grid; gap: var(--space-4); }
+.evaluation-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr); gap: var(--space-4); align-items: start; }
+.evaluation-viewer { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-small); margin-top: var(--space-3); overflow: hidden; }
+.evaluation-stage { position: relative; overflow: hidden; }
+.evaluation-stage > img { display: block; width: 100%; height: auto; }
+.evaluation-box { position: absolute; display: block; padding: 0; min-height: 0; font-size: 11px; text-align: left; align-content: start; border: 2px solid #94a3b8; color: white; background: transparent; }
+.evaluation-box.good { border-color: #39e3a0; }
+.evaluation-box.bad { border-color: #ffc466; }
+.evaluation-box > span { position: absolute; top: 0; left: 0; padding: 0 3px; background: #0b1120; color: white; line-height: 15px; }
+.evaluation-box[aria-pressed=true] { outline: 2px solid var(--accent-text); background: #3b82f62b; z-index: 1; }
+.evaluation-results { display: grid; gap: var(--space-2); max-height: 48vh; overflow: auto; padding: var(--space-2) 3px; }
+.evaluation-face { display: flex; align-items: center; gap: var(--space-3); text-align: left; width: 100%; border-left: 3px solid var(--border); }
+.evaluation-face.good { border-left-color: #39e3a0; }
+.evaluation-face.bad { border-left-color: #ffc466; }
+.evaluation-face[aria-pressed=true] { background: #182e53; border-color: var(--accent-text); }
+.evaluation-face-copy { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
+.evaluation-face-copy small { color: var(--muted); }
+.evaluation-crop { width: 64px; flex: 0 0 64px; position: relative; overflow: hidden; background: var(--bg); }
+.evaluation-crop img { position: absolute; max-width: none; }
+.evaluation-manual, .evaluation-controls { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
+.evaluation-attestation { display: flex; gap: var(--space-2); align-items: start; }
+.evaluation-box-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
+.evaluation-box-fields input { min-width: 0; }
+.evaluation-matrix { overflow-x: auto; }
+.evaluation-matrix table { width: 100%; margin-block: var(--space-3); border-collapse: collapse; }
+.evaluation-matrix th, .evaluation-matrix td { padding: var(--space-2); text-align: left; border-bottom: 1px solid var(--border); }
+@media (max-width: 1050px) { .evaluation-grid { grid-template-columns: 1fr; } }

@@ -16,7 +16,7 @@ export function validateReferencePreview(data, item) {
 
 export const candidateLabel = index => `Face ${index + 1}`;
 
-export function createReferenceReview(item, submit, close) {
+export function createReferenceReview(item, submit, close, refresh) {
   const automatic = item.automatic_selection;
   const layout = el("div", null, "pending-body");
   const previewArea = el("div", null, "pending-preview");
@@ -59,7 +59,7 @@ export function createReferenceReview(item, submit, close) {
   options.append(fields, controls);
   layout.append(previewArea, options);
 
-  let controller, preview, selected, busy = false;
+  let controller, preview, selected, stale = false, busy = false;
   let zoom = 1;
   let choices = [];
   function updateControls() {
@@ -152,13 +152,17 @@ export function createReferenceReview(item, submit, close) {
   }
 
   async function load() {
+    controller?.abort();
     const current = new AbortController();
     controller = current;
+    stale = false;
+    retry.textContent = "Retry preview";
     retry.hidden = viewer.hidden = tools.hidden = true;
     notice(message, "Loading numbered reference preview…");
     try {
-      const path = automatic ? `/gallery/automatic/${item.revision}/${item.pending_id}`
-        : `/gallery/pending/${item.pending_id}?interactive=true`;
+      const id = encodeURIComponent(item.pending_id);
+      const path = automatic ? `/gallery/automatic/${encodeURIComponent(item.revision)}/${id}`
+        : `/gallery/pending/${id}?interactive=true`;
       const data = await request(path, { signal: current.signal });
       if (current.signal.aborted) return;
       preview = validateReferencePreview(data, item);
@@ -171,6 +175,8 @@ export function createReferenceReview(item, submit, close) {
     } catch (error) {
       if (current.signal.aborted) return;
       notice(message, error.message, "error");
+      stale = error.status === 409 && Boolean(refresh);
+      if (stale) retry.textContent = "Refresh gallery";
       retry.hidden = false;
     }
     updateControls();
@@ -182,7 +188,7 @@ export function createReferenceReview(item, submit, close) {
     if (automatic) close();
     else submit(item);
   });
-  retry.addEventListener("click", load);
+  retry.addEventListener("click", () => { if (stale) refresh(); else load(); });
   updateControls();
   load();
   return {

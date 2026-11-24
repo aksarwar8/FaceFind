@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import base64
+import hashlib
 import logging
 import time
 from typing import Annotated
@@ -651,7 +652,8 @@ async def analyze_group_photo(
     filename = Path((file.filename or "").replace("\\", "/")).name or "group-photo"
 
     try:
-        image = cv2.cvtColor(decode_image(file), cv2.COLOR_RGB2BGR)
+        geometry = {}
+        image = cv2.cvtColor(decode_image(file, geometry=geometry), cv2.COLOR_RGB2BGR)
 
         # Run the shared recognition pipeline.
         recognition = recognize_image(
@@ -687,10 +689,21 @@ async def analyze_group_photo(
             encoded_image.tobytes()
         ).decode("utf-8")
         annotation_ms = (time.perf_counter() - annotate_started) * 1000
+        file.file.seek(0)
+        image_sha256 = hashlib.file_digest(file.file, "sha256").hexdigest()
+        matcher = request.app.state.matcher
 
         return {
             "message": "Group photograph analysed successfully.",
             "filename": filename,
+            "analysis_id": uuid4().hex,
+            "image_sha256": image_sha256,
+            "image_geometry": geometry,
+            "gallery_identities": list(gallery["names"]),
+            "recognition_rules": {
+                name: getattr(matcher, name, None)
+                for name in ("recognition_threshold", "margin_threshold", "possible_threshold", "possible_margin_threshold")
+            },
             "face_count": recognition["face_count"],
             "summary": {
                 "recognised": sum(

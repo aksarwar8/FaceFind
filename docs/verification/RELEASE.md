@@ -45,7 +45,7 @@ Repeat analysis reused the same gallery revision and cached embeddings. The JPEG
 
 ~~~powershell
 python -m pytest -q tests scripts/evaluation -rs
-node --experimental-default-type=module --test tests/test_desktop_frontend.mjs
+node --experimental-default-type=module --test tests/*.mjs
 python -m compileall -q app.py api face_engine scripts/evaluation tests
 git diff --check
 ~~~
@@ -54,7 +54,7 @@ git diff --check
 
 ## Manual browser and screenshot pass
 
-The authorized browser host was unavailable. No rendered application interaction or screenshot is claimed.
+The authorized browser host was unavailable during the baseline run. Later targeted browser verification is recorded under Evaluation Studio verification below.
 
 1. Launch the candidate on `127.0.0.1:8000` using the [README quick start](../../README.md#installation-and-first-run). Use only explicitly publishable reference and group photographs. Use approved labels or generic names and keep captures outside Git until reviewed.
 2. At **1366×768** and **1920×1080**, check Dashboard, Gallery, Analyze and Settings for overflow, keyboard navigation and readable controls. Confirm that dashboard figures reflect the actual gallery and latest result.
@@ -65,7 +65,7 @@ The authorized browser host was unavailable. No rendered application interaction
 ## Outstanding issues
 
 - **P0** — The original assignment brief and complete, reviewed AI collaboration history are outstanding. Obtain the brief, reconcile the matrix, and supply authentic sanitized exports to satisfy the known history requirement.
-- **P1** — Complete the manual browser and publishable screenshot pass above. The prior browser work verified the Archify diagram only.
+- **P1** — Complete the manual browser and publishable screenshot pass above. The full desktop walkthrough and publishable screenshots remain outstanding. Targeted Gallery and Evaluation checks are recorded below.
 - **P1** — The Smart heuristic can choose the wrong person when the intended face is smaller. Use strict review or verify each automatic choice before a consequential demo.
 - **P2** — Test optional HEIC/HEIF decoding and shaped Indic labels on an RAQM-enabled installation and collect representative annotated real-photo evidence if future use requires broader coverage. Research weight rights remain restricted or unresolved and the bundled evaluator path is independent of them.
 
@@ -101,3 +101,17 @@ Archify 3.3.0 regenerated the diagram from the updated specification. Validate, 
 | Preferred HTTP | Started SCRFD + AdaFace. Enrolled 52 identities with nine manual confirms. There were two automatic selections. Strict review and automatic correction passed. Two concurrent requests for the same pending ID produced one enrollment and one HTTP 409. Both pipelines restored their own cache after switching. Repeated group analysis reused embeddings and returned eight assigned identities and six Unknown. These counts are model outputs on an unannotated photograph. |
 | Privacy and offline boundary | Live API checked no-store on thumbnails, interactive and automatic review previews, group previews and annotated responses. Python DNS and TCP were guarded in the isolated server processes, with no external attempts during replay. This does not cover native-code networking or replace a disconnected browser demonstration. |
 | Remaining manual evidence | Review the Windows browser workflow and publishable screenshots, run shaped Indic label rendering on an RAQM-enabled installation, and supply the original assignment brief and authentic sanitized AI collaboration history. |
+
+## Published bundled-model baseline
+
+Public commit `2cdcc1fcacceb1abea083baf59ec1ccb2af5f078` was freshly cloned from GitHub. In an isolated Windows Python 3.11.9 runtime containing only the base requirements, explicit YuNet + SFace startup and automatic fallback both passed. Six references enrolled after one manual confirmation, and a group upload produced a decoded annotated JPEG without ground truth.
+
+## Evaluation Studio verification
+
+The Evaluation workspace was exercised in local Chrome with SCRFD + AdaFace, the private 60-photo gallery, and five synthetic demo composites. Browser checks covered the empty and Not Evaluated states, manual enrolled-name entry, partial progress, missed-box entry, both actual ground-truth formats, one-to-one results, synchronized selection and filtering, Dashboard status, and separate JSON, CSV and JPEG downloads. Opening another analysis cleared the previous evaluation. The exported prediction rows matched the original analysis response. The unannotated group images and private reports, including the browser screenshot, remain Git-ignored.
+
+Archify 3.3.0 regenerated the architecture with the independent browser-side evaluation path. Validation, delivery, checks and the Archify browser gate passed. [Sanitized demo outcomes](../../RESEARCH.md#evaluation-studio-demonstration).
+
+The current candidate keeps the existing recognition workflow usable without ground truth. Chrome also verified that three multi-face references were queued in Always Review mode, that a non-first card could be reviewed, and that a stale preview returned a recoverable HTTP 409.
+
+The final suites returned 103 Python passes and four existing skips (two Windows directory-symlink checks and two Indic shaping checks), plus 14 JavaScript passes. A separate Chrome replay of the captured analysis verified the imported file SHA-256, boxless roster pairing, the incomplete-review guard and invalidation on a gallery revision change without a new inference run.

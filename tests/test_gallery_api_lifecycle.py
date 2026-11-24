@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import hashlib
 import io
 import unittest
 from types import SimpleNamespace
@@ -152,10 +153,27 @@ class GalleryApiLifecycleTests(unittest.TestCase):
             {"bbox": [10, 10, 2, 2], "confidence": 0.55},
         ])
         state.embedder.get_embedding = Mock(wraps=state.embedder.get_embedding)
-        result = asyncio.run(upload_gallery(request, [upload("Target.jpg", encoded_image(2))], "always_review"))
-        self.assertEqual(result["pending"][0]["faces"], 2)
+        result = asyncio.run(upload_gallery(request, [
+            upload("Target.jpg", encoded_image(2)), upload("Next.jpg", encoded_image(2)),
+        ], "always_review"))
+        first, second = result["pending"]
+        self.assertEqual([first["faces"], second["faces"]], [2, 2])
         self.assertFalse(result["automatic_references"])
         state.embedder.get_embedding.assert_not_called()
+        self.assertIsInstance(first["pending_id"], str)
+        self.assertNotEqual(first["pending_id"], second["pending_id"])
+
+        preview = get_pending_reference(first["pending_id"], request, interactive=True)
+        self.assertEqual(preview["pending_id"], first["pending_id"])
+        self.assertEqual(preview["filename"], first["filename"])
+        self.assertEqual([candidate["index"] for candidate in preview["candidates"]], [0, 1])
+        self.assertTrue(all(candidate["crop"].startswith("data:image/jpeg;base64,")
+                            for candidate in preview["candidates"]))
+        updated = select_reference_face(FaceSelection(pending_id=first["pending_id"], face_index=1), request)
+        self.assertEqual(updated["people_count"], 1)
+        self.assertEqual(updated["pending"], [second])
+        self.assertEqual(get_pending_reference(second["pending_id"], request, interactive=True)["pending_id"],
+                         second["pending_id"])
 
     def test_invalid_box_does_not_send_a_single_valid_reference_face_to_review(self):
         request = make_request()
@@ -276,9 +294,16 @@ class GalleryApiLifecycleTests(unittest.TestCase):
             "names": ["Known"], "embeddings": np.array([[1.0, 0.0]], np.float32),
             "pipeline_id": "yunet_sface",
         }
-        response = asyncio.run(analyze_group_photo(request, upload("unknown.jpg", encoded_image(1))))
+        payload = encoded_image(1)
+        response = asyncio.run(analyze_group_photo(request, upload("unknown.jpg", payload)))
         self.assertEqual(response["summary"]["unknown"], 1)
         self.assertIsNone(response["results"][0]["identity"])
+        self.assertRegex(response["analysis_id"], r"^[0-9a-f]{32}$")
+        self.assertEqual(response["image_sha256"], hashlib.sha256(payload).hexdigest())
+        self.assertEqual(response["image_geometry"], {"original_width": 16, "original_height": 16, "orientation": 1})
+        self.assertEqual(response["gallery_identities"], ["Known"])
+        self.assertEqual(response["recognition_rules"]["recognition_threshold"],
+                         request.app.state.matcher.recognition_threshold)
 
     def test_stale_review_does_not_select_same_stem_after_queue_advances(self):
         request = make_request()

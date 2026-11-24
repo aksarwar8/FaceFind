@@ -33,8 +33,10 @@ def test_exif_orientation_is_applied_once(format):
     source.paste("blue", (6, 0, 12, 6))
     exif = source.getexif()
     exif[274] = 6
-    image = decode_image(upload(source, format, exif=exif))
+    geometry = {}
+    image = decode_image(upload(source, format, exif=exif), geometry=geometry)
     assert image.shape == (12, 6, 3)
+    assert geometry == {"original_width": 12, "original_height": 6, "orientation": 6}
     assert image[0, 0, 0] > 200
     assert image[-1, 0, 2] > 200
 
