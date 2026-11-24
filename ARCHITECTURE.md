@@ -47,6 +47,12 @@ flowchart LR
 | [scripts/evaluation](scripts/evaluation/) and [tests](tests/) | Benchmark, calibration, verification and regression code. The production SCRFD adapter reuses the evaluator's detector factory. The benchmark runners remain separate from normal requests. |
 | [models/face](models/face/) | Tracked YuNet and SFace checkpoints and notices. Restricted optional checkpoints belong in the ignored `data/private/models/` directory. |
 
+## System Settings in the running application
+
+![System Settings showing preferred, active and last requested pipelines and CPU model status](docs/screenshots/system-settings.png)
+
+The cropped drawer records one run with SCRFD + AdaFace active and ready on CPU. Bundled-model fallback and pipeline switching were verified separately. [Release verification](docs/verification/RELEASE.md)
+
 ## Architecture Trade-offs
 
 | What we chose | What we gave up | Why |

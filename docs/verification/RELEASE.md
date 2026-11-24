@@ -65,7 +65,7 @@ The authorized browser host was unavailable during the baseline run. Later targe
 ## Outstanding issues
 
 - **P0** — Complete original AI histories remain outstanding under the recovered brief. Supply authentic exports or accessible share links from the first project prompt. [History index](../ai_chats/README.md)
-- **P1** — Complete the manual browser and publishable screenshot pass above. The full desktop walkthrough and publishable screenshots remain outstanding. Targeted Gallery and Evaluation checks are recorded below.
+- **P1** — The owner supplied manual browser captures and redacted versions are ready for review. A full desktop walkthrough and a disconnected-network demonstration remain outside the verified scope. [Screenshot register](../screenshots/README.md)
 - **P1** — The Smart heuristic can choose the wrong person when the intended face is smaller. Use strict review or verify each automatic choice before a consequential demo.
 - **P2** — Test optional HEIC/HEIF decoding and shaped Indic labels on an RAQM-enabled installation and collect representative annotated real-photo evidence if future use requires broader coverage. Research weight rights remain restricted or unresolved and the bundled evaluator path is independent of them.
 
@@ -100,7 +100,7 @@ Archify 3.3.0 regenerated the diagram from the updated specification. Validate, 
 | Bundled-only HTTP | Requested SCRFD + AdaFace and automatically started YuNet + SFace. Enrolled six identities after one manual confirmation. Group analysis returned an annotated JPEG with one assigned identity and 12 Unknown. A failed switch preserved the current gallery. |
 | Preferred HTTP | Started SCRFD + AdaFace. Enrolled 52 identities with nine manual confirms. There were two automatic selections. Strict review and automatic correction passed. Two concurrent requests for the same pending ID produced one enrollment and one HTTP 409. Both pipelines restored their own cache after switching. Repeated group analysis reused embeddings and returned eight assigned identities and six Unknown. These counts are model outputs on an unannotated photograph. |
 | Privacy and offline boundary | Live API checked no-store on thumbnails, interactive and automatic review previews, group previews and annotated responses. Python DNS and TCP were guarded in the isolated server processes, with no external attempts during replay. This does not cover native-code networking or replace a disconnected browser demonstration. |
-| Remaining manual evidence | Review the Windows browser workflow and publishable screenshots, run shaped Indic label rendering on an RAQM-enabled installation, and supply the complete authentic AI collaboration history. |
+| Remaining manual evidence | Run shaped Indic label rendering on an RAQM-enabled installation and supply the remaining authentic AI histories. [Screenshot evidence](../screenshots/README.md) |
 
 ## Public clone verification
 
@@ -111,6 +111,12 @@ A fresh GitHub clone matched `9734b203f524670b695e85b0ea2088f4c6794517` and cont
 ### Earlier bundled-model baseline
 
 Public commit `2cdcc1fcacceb1abea083baf59ec1ccb2af5f078` was freshly cloned from GitHub. In an isolated Windows Python 3.11.9 runtime containing only the base requirements, explicit YuNet + SFace startup and automatic fallback both passed. Six references enrolled after one manual confirmation, and a group upload produced a decoded annotated JPEG without ground truth.
+
+## Owner-supplied browser evidence
+
+Dashboard, Gallery Manager, Analyze and the System Settings drawer show a ready local CPU engine, a 60-reference gallery and a completed group-photo analysis. These captures verify visible application states. No disconnected-network recording or equivalent evidence was supplied. The existing guarded runtime and fresh-clone Chrome network checks remain the offline evidence. [Screenshot register](../screenshots/README.md)
+
+The Evaluation Studio capture comes from the saved Chrome run with imported ground truth. The five saved report hashes match their group images and all five reports are marked complete. The Easy capture shows 9/10 correct outcomes using approximate boxes and an IoU threshold of 0.50. The separate manual-correspondence screenshots lack a matching verified export and are excluded from benchmark evidence. [Controlled cohort](../../RESEARCH.md#evaluation-studio-demonstration)
 
 ## Evaluation Studio verification
 

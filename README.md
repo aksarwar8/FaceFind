@@ -23,7 +23,17 @@ The application release is [`9734b203f524670b695e85b0ea2088f4c6794517`](https://
 | Analyze | Original and annotated group photo, face-by-face outcomes, and recognition exports |
 | Evaluation | Verified ground truth, matched faces and errors, outcome matrix, metrics, and separate exports |
 
-[Open the interactive architecture diagram](docs/architecture/facefind.html) for a shareable view of how those workspaces interact. Browser captures from the verified demonstration contain private images and stay outside this repository.
+These browser captures show the running application. Opaque masks cover photographs and identity labels.
+
+| Dashboard | Reference Gallery |
+|---|---|
+| ![Dashboard with engine status and gallery count](docs/screenshots/dashboard.png) | ![Gallery Manager with enrollment totals and reference controls](docs/screenshots/reference-gallery.png) |
+
+| Group-photo recognition | Evaluation Studio |
+|---|---|
+| ![Analyze workspace showing ten detections and the recognition summary](docs/screenshots/group-photo-recognition.png) | ![Evaluation Studio showing the Easy composite's verified outcome summary and matrix](docs/screenshots/evaluation-studio.png) |
+
+The Analyze capture shows predictions. The Evaluation capture shows the Easy synthetic composite scored against imported annotations and is one of five groups in the controlled demonstration. [Screenshot evidence and privacy treatment](docs/screenshots/README.md)
 
 ## Installation and first run
 

@@ -223,6 +223,8 @@ The documentation audit, source-only review package and chat-history index recor
 | Recognition denominators can hide failures | Saved experiments and original code establish the v1 gallery mismatch and the legacy rejection-field interpretation. | V2 gallery consistency, explicit reporting and independent Studio scoring. [Methodological correction](RESEARCH.md#correcting-the-open-set-cohort) | Verified method changes |
 | Technical depth and evidence separation were hard to follow | Owner relayed the documentation review's scope and recommendations. The complete critique was unavailable. | Separate product, research, architecture and collaboration narratives, with source-linked figures and a verification record. [Consistency report](docs/verification/DOCUMENTATION-CONSISTENCY.md) | Documentation review pending |
 
+The submitted Gallery capture shows the final state after enrollment, with 60 enrolled and zero pending. The interactive review evidence comes from a separate Chrome run that opened a non-first card, checked the three-item queue and confirmed recoverable handling of a stale preview. [Gallery capture](docs/screenshots/reference-gallery.png) ? [Browser verification](docs/verification/RELEASE.md#evaluation-studio-verification)
+
 ## Authentic conversation evidence
 
 These are three verbatim excerpts from the available project conversation, with speaker and context identified. They are selected statements with surrounding context omitted. They are not a reconstructed transcript or an external assistant attribution.
@@ -239,11 +241,11 @@ These are three verbatim excerpts from the available project conversation, with 
 
 > The results apply to five synthetic composites with approximate boxes. They do not establish accuracy on genuine group photographs.
 
-The retained original exchanges document the desired outcomes, the browser-reported failure, the controlled evaluation and the publication authorization. There is no original exported record with which to quote Claude or the earlier ChatGPT conversations. [Evidence gaps](docs/verification/MISSING-EVIDENCE.md)
+The retained original exchanges document the desired outcomes, the browser-reported failure, the controlled evaluation and the publication authorization. The developer supplied share URLs for Claude and ChatGPT. The unauthenticated checks did not expose their conversation text for privacy review or attribution. [ChatGPT evidence status](docs/ai_chats/chatgpt/README.md) · [Claude evidence status](docs/ai_chats/claude/README.md) [Evidence gaps](docs/verification/MISSING-EVIDENCE.md)
 
 ## Full-history evidence still needed
 
-The recovered assignment brief requires the full project-related AI history from the first prompt. The excerpts above establish three selected exchanges. Complete ChatGPT, Codex and Claude coverage still needs authentic exports or accessible share links. [History index](docs/ai_chats/README.md)
+The recovered assignment brief requires the full project-related AI history from the first prompt. The excerpts above establish three selected exchanges. Seven recovered Codex sessions have sanitized transcripts. The first Codex development prompt, any earlier or missing sessions, and the original ChatGPT and Claude conversations still need authentic exports or accessible share links. [History index](docs/ai_chats/README.md)
 
 ## Reflection
 

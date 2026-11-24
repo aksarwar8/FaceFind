@@ -4,10 +4,10 @@ The Industry.AI Task A brief requires the full project-related AI chat history f
 
 | Service | Available evidence | What the developer must supply |
 |---|---|---|
-| ChatGPT | Owner-reported early research and architecture discussions. No original export or share link was supplied. | The earliest project prompt and all subsequent project conversations on ChatGPT, with original order and speaker labels. |
-| Codex | Selected original messages from the available project exchanges support the recorded decisions and excerpts. No complete export or share link was supplied. | Every project thread from the first Codex prompt through implementation, verification, release and final submission work, including any prior sessions or branches. |
-| Claude | Owner-reported independent review and documentation critique. A review snapshot is available, but no original review conversation or share link was supplied. | The original project review thread, documentation critique thread and any other FaceFind Claude exchanges, beginning with the first prompt in each. |
+| ChatGPT | Developer-supplied share URL. Conversation content unavailable in the unauthenticated check. [Verification status](chatgpt/README.md) | A reviewable original export or accessible share page, including the earliest project prompt. |
+| Codex | [Sanitized transcripts from seven local FaceFind sessions](codex/README.md), with coverage and source record metadata. | Review the transcript candidates, supply any earlier or missing project sessions, and close the active-session coverage gap through submission. |
+| Claude | Developer-supplied share URL. Conversation content unavailable in the unauthenticated check. [Verification status](claude/README.md) | A reviewable original export or accessible share page, including the independent review and documentation critique. |
 
-**Coverage status** Incomplete. No full authentic history package or accessible share links were supplied. This index contains no reconstructed transcript.
+**Coverage status** Incomplete. The local Codex transcripts cover the recovered project sessions. The first development prompt and the original ChatGPT and Claude histories remain unverified.
 
 If an export contains credentials, private images, or unrelated personal information, retain the original privately and publish a separately reviewed copy with explicit redaction markers in place. Preserve message order, speakers, and technical meaning. Check that shared links open for an evaluator without account-specific permissions.
