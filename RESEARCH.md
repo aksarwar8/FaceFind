@@ -2,23 +2,22 @@
 
 **Applied computer vision for offline open-set identification**
 
-[Summary](#executive-summary) · [Problem](#problem-formulation) · [Cohorts](#experimental-cohort-register) · [Models](#model-architecture-and-training-objectives) · [Detection](#detector-experiments) · [Recognition](#recognition-experiments) · [Calibration](#calibration-and-deployed-rules) · [Failure investigations](#engineering-case-studies) · [Final demo](#evaluation-studio-demonstration) · [Decision and limits](#multi-objective-decision)
+[Summary](#executive-summary) · [Problem](#problem-formulation) · [Data](#data-source-investigation) · [Cohorts](#experimental-cohort-register) · [Tools and model choices](#model-architecture-and-training-objectives) · [Detection](#detector-experiments) · [Recognition](#recognition-experiments) · [Calibration](#calibration-and-deployed-rules) · [Failure investigations](#engineering-case-studies) · [Final demo](#evaluation-studio-demonstration) · [Decision and limits](#multi-objective-decision)
 
 ## Executive summary
 
-FaceFind needed a detector that handled group photographs on CPU, a recognizer that could decline unmatched identities, and a bundled setup an evaluator could run without optional weights. A single score could not answer all three questions.
+FaceFind must identify people from a local reference gallery while allowing faces outside that gallery to remain Unknown. Offline CPU execution makes detection quality, recognition quality, runtime and model distribution separate design constraints. The research used annotated boxes to measure localization, fixed detections to compare recognizers, and group-photo workflows to examine how those stages interact.
 
-- **SCRFD earned its place on a shared detector cohort.** On 500 WIDER FACE images, it improved precision by **18.4 percentage points** and recall by **3.2 points** over YuNet, raising custom F1 from **.6716 to .7570**. Mean detector latency rose from **100 to 526 ms**. Its recall advantage was consistent across the saved face-height buckets.
-- **AdaFace balanced known-face identification and CPU cost.** AdaFace and ArcFace each accepted **576/578** correctly identified known probes in the recognition-only test. ArcFace falsely accepted **0/442** evaluated unknown probes versus AdaFace's **10/442**, but averaged **789 ms** per embedding versus AdaFace's **56 ms**. The combined SCRFD + AdaFace pipeline subsequently improved known acceptance and detection recall on separate cohorts.
-- **A valid gallery had to be established before judging recognition.** The initial open-set run selected 200 identities but enrolled only 146. The corrected protocol verified enrollment before retaining known probes and used reserves to restore gallery size. Earlier and corrected results remain separate.
-- **Application failures required their own evidence.** SCRFD missed three real reference faces despite its benchmark advantage. A gallery-only 640-pixel retry recovered all three. A separate brick-wall detection exposed the limits of overlap-based suppression and dominant-face selection.
-- **Evaluation Studio made correctness reviewable.** A 60-identity gallery and five independently annotated synthetic composites produced **56/57 correct outcomes**, including one known rejection. The earlier genuine-photo benchmark established application latency and inference behavior. The synthetic run adds measured correctness for its own cohort.
+- **Detector choice.** On the same 500 WIDER FACE images, SCRFD improved precision by **18.4 percentage points** and recall by **3.2 points** over YuNet. Custom F1 rose from **.6716 to .7570**, with mean detector latency rising from **100 to 526 ms**.
+- **Recognizer choice.** AdaFace and ArcFace each correctly accepted **576/578** evaluated known probes. ArcFace falsely accepted **0/442** evaluated unknown probes versus AdaFace's **10/442**, and averaged **789 ms** per embedding versus **56 ms** for AdaFace. This is a measured quality–cost trade-off for these exports and this cohort.
+- **Protocol repair.** V1 selected 200 known identities but enrolled only 146. V2 verified the actual gallery before scoring known probes. That correction restored the intended task and changed the cohort, so the runs stay separate.
+- **System and workflow evidence.** The ten-composite shared-input experiment favored SCRFD + AdaFace on detection recall and end-to-end known identification under research-calibrated rules. Local gallery failures still required targeted investigation. A 640-pixel reference-only retry recovered three missed references. A separate false-positive study supported human review. Evaluation Studio later recorded **56/57** correct outcomes with deployed SCRFD + AdaFace on five synthetic composites with approximate boxes and calibration identity overlap.
 
-YuNet + SFace remains the bundled configuration for distribution, lower CPU latency and startup recovery. SCRFD + AdaFace remains the preferred authorized local research configuration. The [evidence index](docs/research/EVIDENCE.md) traces the claims to saved runs.
+SCRFD + AdaFace is the preferred local research configuration when users can supply its checkpoints subject to applicable terms. YuNet + SFace remains the independently runnable bundled path, with lower measured CPU costs and startup recovery. The choice draws on detector, recognition and operational evidence. [Run inventory](docs/research/EVIDENCE.md)
 
 ## Problem formulation
 
-**Detection** estimates a face box and landmarks. **Alignment** maps the landmarks to a common crop. **Embedding** represents that aligned face as a vector in the selected model's feature space. FaceFind compares L2-normalized vectors, so cosine similarity for probe (q) and gallery identity (i) is (s_i = q^	op g_i).
+**Detection** estimates a face box and landmarks. **Alignment** maps the landmarks to a common crop. **Embedding** represents that aligned face as a vector in the selected model's feature space. For probe $q$ and gallery vector $g_i$, cosine similarity is $s_i = (q^{\top}g_i)/(\lVert q\rVert_2\lVert g_i\rVert_2)$. FaceFind uses L2-normalized embeddings, for which this reduces to $s_i = q^{\top}g_i$.
 
 Rank-1 identification asks whether $\arg\max_i s_i$ is the annotated identity before any acceptance rule. In open-set inference, the top score $s_1$ and gap $s_1-s_2$ must clear model-specific bounds before FaceFind confirms an identity. The fallback also has a tentative Possible state. Similarity is a ranking quantity and carries no calibrated probability of correctness. Larger galleries can increase opportunities for impostor matches. Pose, illumination, occlusion, framing and resolution affect different stages.
 
@@ -34,6 +33,17 @@ When several detections compete for one gallery identity, the application preser
 6. How can a demonstration distinguish detection and recognition outputs from verified correctness?
 
 These questions organize completed work retrospectively.
+
+## Data source investigation
+
+| Source | Why it fits the question | Boundary |
+|---|---|---|
+| [WIDER FACE validation set](https://shuoyang1213.me/WIDERFACE/) | Box annotations support detector localization comparisons at identical IoU criteria. Variation in face height and scene density supports stratified recall. | Box labels do not supply an identity gallery. FaceFind's custom box metrics are distinct from official WIDER FACE AP. |
+| [Labeled Faces in the Wild](https://people.cs.umass.edu/~elm/papers/lfw.pdf) | Identity-labeled images support one enrollment reference, distinct known probe images of the same person, and probes from people absent from the test gallery. Separate identities supply calibration samples. | The source distribution and the selected assignments differ from genuine group-photo capture. FaceFind uses custom open-set cohorts. |
+| Controlled synthetic composites from LFW probes | Source identities and placement transforms provide independent label and approximate box evidence. Shared composites hold input content fixed while comparing whole pipelines. | The ten-composite model comparison and five-composite Studio demonstration have separate galleries and protocols. Projected boxes and compositing limit transfer to genuine photos. |
+| Genuine local reference and group photos | Actual enrollment and group analysis exercise app behavior, CPU cost and review decisions. The targeted 17-reference folder, false-positive photo and additional stress samples test specific hypotheses. | The genuine timing photo has no identity ground truth. Deliberately sampled failure cases do not estimate error prevalence. |
+
+Known/unknown status is defined relative to the gallery used by each trial. Calibration and test identities were disjoint in the recognition-only and combined benchmarks. The Studio demonstration separately audits its overlap with earlier calibration pools. Dataset and photograph rights remain separate from the model licenses. [Provenance and rights](models/face/MODEL_LICENSES.md#dataset-materials)
 
 ## Experimental cohort register
 
@@ -53,25 +63,31 @@ These questions organize completed work retrospectively.
 
 ## Model architecture and training objectives
 
-The published model families explain which trade-offs were plausible. The local checkpoint and adapter determine the result that was measured.
+### Existing tools and literature
 
-| Model | Relevant design | Local variant and role |
+The baseline uses OpenCV's local ONNX APIs for box and landmark prediction, alignment and face embeddings. The integration reuses the bundled runtime and keeps evaluator setup small. The optional path uses InsightFace's SCRFD detector and ONNX Runtime adapters for research recognizers. These comparisons concern the shipped or locally evaluated exports and their CPU execution, rather than general performance claims for the wider toolkits. [OpenCV DNN face APIs](https://docs.opencv.org/4.x/d0/dd4/tutorial_dnn_face.html) · [InsightFace project](https://github.com/deepinsight/insightface) · [FaceFind adapters](face_engine/research_models.py)
+
+The original model papers explain plausible trade-offs. Saved runs establish which alternatives were actually tested, and the table records their disposition. A remote face service would conflict with offline runtime. That is a retrospective constraint comparison, with no cloud service benchmark.
+
+### Selection and rejection register
+
+| Model and role | Evaluated export and technique | Evidence and disposition |
 |---|---|---|
-| YuNet | Compact anchor-free face detector designed for edge latency. It predicts face boxes and five landmark locations. | OpenCV Zoo March 2023 ONNX, through OpenCV FaceDetectorYN. [Paper](https://link.springer.com/article/10.1007/s11633-023-1423-y) |
-| RetinaFace | Dense single-stage multi-scale detection, with landmark supervision alongside localization in the published design. | MobileNet 0.25 ONNX export with its own input layout and preprocessing. Its local results do not generalize to every RetinaFace backbone. [CVPR paper](https://openaccess.thecvf.com/content_CVPR_2020/html/Deng_RetinaFace_Single-Shot_Multi-Level_Face_Localisation_in_the_Wild_CVPR_2020_paper.html) |
-| SCRFD | Redistributes training samples and computational capacity across the detector's scales and stages to balance efficiency and face coverage. | InsightFace SCRFD-10G-KPS, stride-padded input and five landmarks. [Paper](https://arxiv.org/abs/2105.04714) |
-| YOLOv8n-Face | Small single-stage YOLO-family face-detection export. The local adapter measures its box output. | Third-party `yolov8n-face.onnx`. The exact training recipe is unverified. [Upstream inference implementation](https://github.com/yakhyo/yolov8-face-onnx-inference) |
-| SFace | Sigmoid-constrained hypersphere loss adjusts the attraction and separation gradients for intra-class and inter-class training examples. | Bundled OpenCV Zoo MobileFaceNet-family recognizer, 128 dimensions, OpenCV five-point alignment. [Paper](https://arxiv.org/abs/2205.12010) |
-| ArcFace | Additive angular margin in the normalized classification space encourages tighter class separation. | InsightFace ResNet100 recognition checkpoint, 512 dimensions. Evaluated as a research control. [Paper](https://arxiv.org/abs/1801.07698) |
-| AdaFace | Quality-adaptive margin uses training feature norm as a proxy for image quality to adjust supervision. | IR-18 ONNX export, 512 dimensions, five-point similarity transform to 112 × 112 followed by BGR normalization and normalized output. [Paper](https://arxiv.org/abs/2204.00964) |
+| **YuNet**, detector | OpenCV Zoo March 2023 ONNX. Compact anchor-free prediction of boxes and five landmarks. [Paper](https://link.springer.com/article/10.1007/s11633-023-1423-y) | **Retained for the bundled path.** Smaller and faster on the shared CPU detector run. SCRFD recovered more annotated boxes and generated fewer false positives. |
+| **SCRFD**, detector | InsightFace SCRFD-10G-KPS, stride-padded input and five landmarks. Redistributes training samples and compute across scales and stages. [Paper](https://arxiv.org/abs/2105.04714) | **Preferred research detector.** Best custom F1 on the common 500 images, with higher CPU cost. Close-up reference misses required a separate enrollment diagnostic. |
+| **RetinaFace MobileNet 0.25**, detector | Quantized ONNX export with MobileNet 0.25 backbone, dense multi-scale detection and landmark supervision in the published design. [Paper](https://openaccess.thecvf.com/content_CVPR_2020/html/Deng_RetinaFace_Single-Shot_Multi-Level_Face_Localisation_in_the_Wild_CVPR_2020_paper.html) · [Evaluated model card](https://huggingface.co/amd/retinaface) | **Not selected.** Low recall for this export, especially on the smallest faces, outweighed its CPU latency advantage over SCRFD. The evidence concerns the local variant. |
+| **YOLOv8n-Face**, detector | Third-party `yolov8n-face.onnx`, a compact single-stage YOLO-family export. The adapter evaluates boxes. Exact training recipe remains unverified. [Export and inference source](https://github.com/yakhyo/yolov8-face-onnx-inference) | **Not selected.** Higher precision but lower recall than SCRFD on the shared 1,500-image prefix. The full run and comparable timing were unavailable. |
+| **SFace**, recognizer | OpenCV Zoo MobileFaceNet-family 128-D checkpoint, five-point alignment. Sigmoid-constrained hypersphere loss modulates intra- and inter-class training gradients. [Paper](https://arxiv.org/abs/2205.12010) | **Retained for the bundled path.** Lowest mean embedding latency of the three compared recognizers. Lower correct known acceptance on the shared recognition-only cohort. Deployed rules remain separate from calibrated research settings. |
+| **ArcFace**, recognizer | InsightFace ResNet100, 512-D. Additive angular margin encourages class separation in normalized embedding space. [Paper](https://arxiv.org/abs/1801.07698) | **Not selected for deployment.** Strong known acceptance and the lowest observed false acceptance, with the largest checkpoint and highest mean CPU embedding time in the comparison. |
+| **AdaFace**, recognizer | IR-18 ONNX, 512-D. Training feature norm informs the quality-adaptive margin. The local adapter aligns to 112 × 112 and applies BGR normalization. [Paper](https://arxiv.org/abs/2204.00964) | **Preferred research recognizer.** Matched ArcFace's correctly accepted known count with a smaller file and materially lower mean CPU cost. ArcFace had fewer observed false accepts. |
 
-The recognizer-only comparison holds YuNet detections fixed and uses the appropriate alignment and input normalization for each recognizer. [Checkpoint fingerprints and rights](models/face/MODEL_LICENSES.md)
+The recognition-only comparison holds YuNet detections fixed and uses the appropriate alignment and input normalization for each recognizer. [Checkpoint fingerprints and rights](models/face/MODEL_LICENSES.md)
 
 ## Detector experiments
 
 ### Protocol and initial YuNet measurements
 
-The [WIDER FACE dataset](https://shuoyang1213.me/WIDERFACE/) provides validation images and annotated face boxes. The evaluator reads the image path, box count and annotation rows, converts valid boxes to a common coordinate convention, and matches predictions in descending detector score to the highest-IoU unmatched eligible annotation at IoU ≥ 0.50. Matches are TP, unmatched predictions FP and unmatched annotations FN. Precision is TP/(TP+FP), recall is TP/(TP+FN), and F1 is their harmonic mean. Exclusions such as unreadable images are reported separately. This is a custom box protocol. Official WIDER FACE Easy/Medium/Hard AP uses a different evaluation procedure.
+The [WIDER FACE dataset](https://shuoyang1213.me/WIDERFACE/) provides validation images and annotated face boxes. The evaluator reads the image path, box count and annotation rows, converts valid boxes to a common coordinate convention, and matches predictions in descending detector score to the highest-IoU unmatched eligible annotation at IoU ≥ 0.50. IoU is the intersection area divided by the union area. Matches are TP, unmatched predictions FP and unmatched annotations FN. Precision is $P=TP/(TP+FP)$, recall is $R=TP/(TP+FN)$, and their harmonic mean is $F_1=2PR/(P+R)$. Exclusions such as unreadable images are reported separately. This is a custom box protocol. Official WIDER FACE Easy/Medium/Hard AP uses a different evaluation procedure.
 
 | Production YuNet cohort | Images | Annotated faces | TP | FP | FN | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -111,11 +127,13 @@ The 3,226-image run was interrupted. The experiment runner records score/NMS set
 | YOLOv8n-Face | 10,623 | 245 | 14,640 | .9775 | .4205 | .5880 | .1366 / .6403 / .8807 |
 | SCRFD-10G-KPS | 16,212 | 748 | 9,051 | .9559 | .6417 | .7679 | .4538 / .8268 / .8992 |
 
-The saved prediction files do not contain comparable per-image timings. No speed ranking is supported. This cohort is independent of the earlier 500-image sample.
+The saved prediction files do not contain comparable per-image timings. No speed ranking is supported. This is a separate reporting cohort from the earlier 500-image sample. The observed precision gain for YOLOv8n-Face did not justify replacing SCRFD: recall was substantially lower on the common prefix and runtime was unmeasured.
 
 ### Earlier resize investigation
 
 The historical scaling utility shows that the original and resized image paths were compared. No saved output supports exact before/after counts or the alleged fragmentation of detections. Production YuNet downsizes above a 1,280-pixel long edge and remaps boxes and landmarks. SCRFD uses proportional resize plus stride-32 padding and reverses that transform. See [detector source](face_engine/detector.py) and [SCRFD adapter](face_engine/research_models.py).
+
+**Engineering conclusion.** SCRFD earned the preferred research role through higher recall and substantially fewer unmatched predictions on the shared 500-image run. YuNet retained a distinct role where low overhead and a bundled CPU setup matter. The 1,118-image single-annotation census and failure audit identify different conditions and do not change the shared-input ranking.
 
 ## Correcting the open-set cohort
 
@@ -147,7 +165,7 @@ The saved run used one shared gallery of 200 known identities and 1,313 fixed te
 
 Conditional rates use processed probes. FPIR is the false positive identification rate for unknowns. FNIR is the false negative identification rate for knowns, including wrong identities and non-acceptance. End-to-end known metrics include failures as misses. End-to-end FPIR divides by all unknown probes and counts only false identifications in the numerator. Its complement would include processing failures, so use the conditional unknown rejection rate and the explicit failure count to interpret performance. The recognizer comparison used Python 3.11.9, OpenCV 4.12.0, and ONNX Runtime 1.32.0 with the CPU execution provider. ArcFace achieved the lowest observed FPIR on this sample but carried the highest CPU latency and file size. AdaFace matched ArcFace's known acceptance results with markedly lower CPU embedding latency.
 
-The legacy result field named `end_to_end_rejection_rate` was calculated as (1-\mathrm{FPIR}_{e2e}). Its numerator includes unprocessed unknown probes. The observed successful rejections and their true denominators are shown below as derived counts. The on-disk benchmark is preserved.
+The legacy result field named `end_to_end_rejection_rate` was calculated as $1-\mathrm{FPIR}_{\mathrm{e2e}}$. Its numerator includes unprocessed unknown probes. The observed successful rejections and their true denominators are shown below as derived counts. The on-disk benchmark is preserved.
 
 | Model | True unknown rejections / evaluated | True unknown rejections / attempted | False identifications / evaluated |
 |---|---:|---:|---:|
@@ -155,13 +173,18 @@ The legacy result field named `end_to_end_rejection_rate` was calculated as (1-\
 | ArcFace | 442 / 442 | 442 / 557 | 0 / 442 |
 | AdaFace | 432 / 442 | 432 / 557 | 10 / 442 |
 
-The recognition benchmark's EER and ROC-AUC describe its verification component. The repository contains a separate LFW pairs evaluator, but no completed official pairs result was located.
+The verification component derives pairs from processed gallery/probe embeddings. It compares the true-identity score for evaluated known probes against nonmatching gallery scores. Unknown probes contribute nonmatching scores against all gallery rows. ROC-AUC summarizes threshold discrimination on these pairs, and EER interpolates where false acceptance and false rejection meet. Neither metric establishes open-set acceptance at the deployed operating point. ArcFace's 0/442 observed false acceptances do not establish zero population risk. The separate official-pairs evaluator has no verified completed result. [Recognition-only implementation](scripts/evaluation/compare_open_set_recognizers.py)
 
 ![Recognition CPU embedding latency and conditional acceptance trade-off](docs/research/figures/recognition.svg)
 
 *Figure 2. Bars on the right use the evaluated probes only. The numbers above the false-acceptance bars are counts out of 442.*
 
 ## Calibration and deployed rules
+
+### Operating-point selection
+
+- **Recognition-only threshold.** For every processed calibration known probe, use cosine similarity to its own enrolled reference. For a processed unknown probe, use its maximum similarity over the calibration gallery. Sort the distinct pooled scores and test each adjacent midpoint, plus the two values just beyond the score range. Maximize the mean of the genuine-score acceptance rate and unknown rejection rate. Ties favor a higher threshold. This pair-score objective differs from the held-out correct-rank-1 acceptance outcome. There is no top-two margin in this run. [Threshold selection](scripts/evaluation/compare_open_set_recognizers.py#L141-L148)
+- **Combined pipeline threshold and margin.** For each bundle and gallery size, compute the top candidate, top score and top-two gap on usable calibration probes. Search the Cartesian product of unique quantile values from 51 equally spaced quantile levels for scores and 31 for gaps, endpoints included. Maximize the mean of correct known identification **and** acceptance and unknown rejection. A known probe counts as correct only when its top identity is correct and both gates pass. An unknown probe is rejected if either gate fails. Ties favor the higher threshold, then the higher margin. Record processing failures separately and freeze the selected pair before scoring test probes. [Combined calibration](scripts/evaluation/compare_facefind_e2e.py#L174-L235)
 
 The completed November 24 run changed from requiring a single detection to deterministic face selection on LFW: largest box, then nearest center, then top-left. It records ambiguous probes independently and does not use identity labels or similarity to select a face. Calibration identities are disjoint from test identities. It preflighted 200 usable known calibration identities and froze separate threshold/margin pairs for the 200-way LFW and 50-way group tasks. This procedure and the recognition-only procedure have different failure denominators despite sharing the test protocol. The earlier November 23 combined attempt was blocked before execution and contributes no result.
 
@@ -176,7 +199,7 @@ The completed November 24 run changed from requiring a single detection to deter
 | Deployed bundled, confirmed | YuNet + SFace | .50 | .12 | Legacy FaceMatcher defaults |
 | Deployed bundled, tentative | YuNet + SFace | .35 | .087 | Legacy FaceMatcher Possible branch |
 
-The legacy SFace rule stays in production. The exact historical rationale for retaining those values was not recorded. The calibrated SFace results therefore describe the research operating points only. The two deployed detector score floors remain .50. YuNet NMS is .30, SCRFD NMS is .40, and SCRFD's reference retry uses the same settings as its primary pass. [Deployed AdaFace settings](face_engine/research_models.py) · [Legacy matcher](face_engine/match.py)
+The bundled SFace application uses its existing confirmed and tentative rules. The research-calibrated SFace results apply only to the listed research settings. A larger gallery adds candidates, including potential impostors, and can change both the best score and the runner-up gap. The separate 50-way and 200-way calibrations account for different gallery sizes in these runs. Transfer to other gallery sizes remains unmeasured. The two deployed detector score floors remain .50. YuNet NMS is .30, SCRFD NMS is .40, and SCRFD's reference retry uses the same settings as its primary pass. [Deployed AdaFace settings](face_engine/research_models.py) · [Legacy matcher](face_engine/match.py)
 
 ### Calibration and denominator summary
 
@@ -201,7 +224,7 @@ Both pipelines used 756 known and 557 unknown probes with zero gallery failures.
 
 ### Controlled group composites
 
-Ten composites held 100 faces, evenly split between known and unknown people. Crops came from held-out probe images; enrollment crops were excluded. Transformed Haar boxes supplied composite annotations. Face size, blur, lighting and output resolution varied. The composites provide controlled stress cases and do not measure accuracy on genuine photos.
+Ten composites held 100 faces, evenly split between known and unknown people. Both systems used the same composites and their own 50-way **research-calibrated** threshold and margin. At IoU ≥ 0.50, matching greedily pairs predictions in descending confidence with the best unmatched eligible annotation. Crops came from held-out probe images; enrollment crops were excluded. Transformed Haar boxes supplied composite annotations. Face size, blur, lighting and output resolution varied. The composites provide controlled stress cases and do not measure accuracy on genuine photos.
 
 | System | Detection P / R / F1 | Known correct conditional / end-to-end | Unknown rejection conditional / end-to-end | FPIR conditional / end-to-end | FNIR conditional / end-to-end | Missed | Image mean / median / p95 ms |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -209,6 +232,8 @@ Ten composites held 100 faces, evenly split between known and unknown people. Cr
 | SCRFD + AdaFace | .9608 / .9800 / .9703 | .9000 / .9000 | .9583 / .9200 | .0417 / .0400 | .1000 / .1000 | 2 | 1,678.53 / 1,640.30 / 2,589.33 |
 
 Identity metrics use detections matched to ground-truth boxes. Unmatched detections count as detection false positives. Any accepted identity on an unmatched box is outside the person-level FPIR numerator. The group conditional denominators are matched known or unknown boxes, unlike the recognition-only denominators based on evaluated probes. The group end-to-end denominators include every annotated person in the corresponding known or unknown class. The comparison records duplicate assignments before the production duplicate-conflict pass. A missed detection, an embedding failure, and a processed match rejected by the decision rule are distinct outcomes.
+
+**Selection implication.** End-to-end known identification was **72%** with YuNet + SFace and **90%** with SCRFD + AdaFace. Unknown rejection rose from **84% to 92%**, and detection recall from **91% to 98%**. These results support the preferred research bundle on this controlled cohort. The five-composite Studio demonstration tests the deployed preferred workflow under its separate protocol.
 
 Combined checkpoint size was about **38.93 MB** for YuNet + SFace and **113.03 MB** for SCRFD + AdaFace, calculated from local file sizes. SCRFD + AdaFace traded lower synthetic detection precision and greater latency for higher recall and better known identification in this fixed experiment. Real deployment clearance was a separate question from choosing a research/demo default.
 
@@ -220,9 +245,9 @@ Combined checkpoint size was about **38.93 MB** for YuNet + SFace and **113.03 M
 
 ### A. SCRFD missed real references
 
-The real 17-photo reference folder exposed a failure mode outside the detector benchmark. At the normal 1,280-pixel cap, SCRFD produced no candidates above 0.50 for three close-up faces that YuNet detected and visual inspection confirmed. The three SCRFD peak scores were .1202, .0750, and .2891. The candidate lists were empty before NMS or clipping. Rotation and the legacy decoder did not recover the faces. At 640 pixels the three peaks rose to .8938, .7598 and .8102, each yielding one final detection. Holding tensor dimensions fixed while reducing the content scale still recovered all three. The experiment establishes scale sensitivity for those photos without identifying a universal face-size boundary.
+**Observation and controls.** The real 17-photo reference folder exposed a failure outside the detector benchmark. The diagnosis tested preprocessing, suppression and input scale against the same missed faces. At the normal 1,280-pixel cap, SCRFD produced no candidates above 0.50 for three close-up faces that YuNet detected and visual inspection confirmed. The three SCRFD peak scores were .1202, .0750, and .2891. The candidate lists were empty before NMS or clipping. Rotation and the legacy decoder did not recover the faces. At 640 pixels the three peaks rose to .8938, .7598 and .8102, each yielding one final detection. Holding tensor dimensions fixed while reducing the content scale still recovered all three. The experiment establishes scale sensitivity for those photos without identifying a universal face-size boundary.
 
-The application retains the 1,280-pixel primary pass. Gallery enrollment retries SCRFD at 640 pixels only when the primary pass has no valid boxes. Both passes retain the existing score and NMS settings. Coverage rose from **14/17 to 17/17** in the original folder. Retry detections are mapped to the working image for AdaFace alignment. The table used manual review for every multi-face reference. Analyze uses the original one-pass behavior.
+**Engineering decision and verification.** The application retains the 1,280-pixel primary pass. Gallery enrollment retries SCRFD at 640 pixels only when the primary pass has no valid boxes. Both passes retain the existing score and NMS settings. Coverage rose from **14/17 to 17/17** in the original folder. Retry detections are mapped to the working image for AdaFace alignment. The table used manual review for every multi-face reference. Analyze uses the original one-pass behavior.
 
 | Validation set | Direct enrollment | Manual selection | Rejected | Retry attempts / detections recovered | Retry total / median |
 |---|---:|---:|---:|---:|---:|
@@ -239,7 +264,7 @@ The production matching threshold and margin remain unchanged. The checks establ
 
 ### B. Brick-wall false positive
 
-A separate diagnostic confirmed that a second SCRFD box at .5330 enclosed a brick-wall recess. The real face scored .8286 and the two boxes had zero IoU. In working-image XYWH pixels, the true-face candidate was approximately (730.3, 660.9, 323.7, 356.2) and the recess was (1,616.2, 908.5, 63.9, 81.4). Four proposals passed the confidence filter and two remained after NMS. NMS correctly collapsed overlapping proposals for the real face and could not suppress the separate false positive by overlap. YuNet returned one face at .9138 on the same decoded image. The experiment supported exposing both crops for review while preserving detector thresholds.
+**Observation and diagnosis.** A reference showed a second SCRFD detection. The diagnostic checked whether it was a second person or an overlapping duplicate. Visual and coordinate inspection confirmed that the .5330 box enclosed a brick-wall recess. The real face scored .8286 and the two boxes had zero IoU. In working-image XYWH pixels, the true-face candidate was approximately (730.3, 660.9, 323.7, 356.2) and the recess was (1,616.2, 908.5, 63.9, 81.4). Four proposals passed the confidence filter and two remained after NMS. NMS correctly collapsed overlapping proposals for the real face and could not suppress the separate false positive by overlap. YuNet returned one face at .9138 on the same decoded image. **Decision and scope.** Expose both crops for operator review and keep detector thresholds fixed. This example establishes an isolated false-positive mechanism, with no estimate of its prevalence.
 
 ### C. Smart Auto-Selection and intent
 
@@ -258,7 +283,7 @@ The test also replaced an incorrect automatic choice with the smaller intended f
 
 ### D. Evaluation Studio
 
-The owner asked how to tell whether recognized and unrecognized counts were correct. The implementation leaves inference unchanged and evaluates a frozen result against independent boxes or manual correspondences. Box matching maximizes valid one-to-one matches at IoU ≥ 0.50, then total IoU. Matched predictions can be a correct known ID, wrong known ID, known rejection, correct Unknown, false acceptance or processing failure. Unmatched detection and missed annotated face are separate outcomes. Conditional scores use valid matched recognition attempts. End-to-end scores retain misses and failures in the denominator. [Evaluation architecture and formulas](ARCHITECTURE.md#evaluation-studio)
+**Observation and decision.** Recognition totals could describe outputs without exposing wrong names or missed faces. To test correctness, FaceFind compares completed predictions with separately supplied truth. The implementation leaves inference unchanged and evaluates a frozen result against independent boxes or manual correspondences. Box matching maximizes valid one-to-one matches at IoU ≥ 0.50, then total IoU. Matched predictions can be a correct known ID, wrong known ID, known rejection, correct Unknown, false acceptance or processing failure. Unmatched detection and missed annotated face are separate outcomes. Conditional scores use valid matched recognition attempts. End-to-end scores retain misses and failures in the denominator. [Evaluation architecture and formulas](ARCHITECTURE.md#evaluation-studio)
 
 ## Evaluation Studio demonstration
 
@@ -332,7 +357,9 @@ The five instrumented stage means total **1,024.9 ms** for SCRFD + AdaFace and *
 | Rights | SCRFD pretrained terms restrict use to non-commercial research. AdaFace checkpoint grant is unresolved. | Bundled MIT and Apache-2.0 notices. Training-data and product-deployment rights remain separate. |
 | Role | Preferred local research and demonstration path | Independently runnable evaluator setup and startup recovery |
 
-The preferred system buys better group recall and known identification at greater compute and deployment cost. ArcFace remains useful evidence that another operating trade-off existed. Its stronger observed unknown rejection in the recognition-only cohort did not offset its local embedding cost for this workstation application. The fallback remains valuable independently of the preferred model comparison.
+**Conclusion.** The shared detector and ten-composite results support SCRFD for the preferred research path. AdaFace balances correctly accepted known probes against size and CPU cost. The measured ArcFace export remains a useful comparison when false acceptance carries more weight. Across deployment constraints, YuNet + SFace offers lower CPU latency, bundled checkpoint notices and verified clean-clone startup. Those advantages justify retaining a second path. [Clean-clone verification](docs/verification/RELEASE.md#public-clone-verification)
+
+Application validation changed how both the results and the product are used. Scale-sensitive misses led to a gallery-only retry. False detections and smaller intended targets made operator review important. Separating inference from scoring lets the operator measure errors when independent truth is available. The synthetic evidence supports the measured workflows and motivates testing on representative genuine photos.
 
 ## Threats to validity
 
@@ -357,7 +384,7 @@ These proposals define validation work beyond the frozen release. Each experimen
 
 ## Data and primary references
 
-The saved evidence supports WIDER FACE for detection, LFW for recognition and composite sources, and local references and a genuine photograph for application checks. No experimental use of CelebA, Open Images, CFP-FP, AgeDB or SoloFace2 was verified. The claimed SoloFace2 circularity concern and the exact original single-photo resize counts remain evidence gaps.
+The [data investigation](#data-source-investigation) identifies the sources represented in the saved runs. CelebA, Open Images, CFP-FP, AgeDB and SoloFace2 have no verified experimental results in this project. The claimed SoloFace2 circularity concern and the exact original single-photo resize counts remain evidence gaps.
 
 - Dataset sources: [WIDER FACE paper](https://www.cv-foundation.org/openaccess/content_cvpr_2016/html/Yang_WIDER_FACE_A_CVPR_2016_paper.html) and [Labeled Faces in the Wild report](https://people.cs.umass.edu/~elm/papers/lfw.pdf).
 - Model papers and export variants are linked in the [model register above](#model-architecture-and-training-objectives).
