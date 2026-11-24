@@ -53,7 +53,7 @@ The first-person fields below summarize documented owner directions. The AI fiel
 
 **AI suggested:**
 
-The independent-review concern reported by the owner was that optional checkpoints could obstruct startup. Codex documented a two-bundle fallback and verification approach.
+After I directed the app to keep the bundled fallback, Codex traced the startup failure to model initialization before fallback or status existed. Codex proposed attempting the requested pipeline first, reporting fallback, and keeping health and status reachable if both bundles failed. [Startup audit exchange](https://github.com/aksarwar8/FaceFind/blob/4309def70781bcb2d4eee29ce78b9352fae2be28/docs/ai_chats/codex/session-2026-11-23T21-02-41.md#L1570-L1575)
 
 **I decided:**
 
@@ -71,7 +71,7 @@ A clean public clone started the bundled pipeline and analyzed a photo. [Release
 
 **AI suggested:**
 
-The AI-assisted v2 evaluation implements enrollment preflight and checks consistency between the actual gallery and the known probe set. The original source of the diagnosis is unverified.
+Codex audited the saved v1 run and proposed preflighting references with the production detector, requiring one usable face per reference, and replacing unsuitable identities from a seeded reserve. It also proposed recording actual gallery membership. [Original audit and follow-up](https://github.com/aksarwar8/FaceFind/blob/4309def70781bcb2d4eee29ce78b9352fae2be28/docs/ai_chats/codex/session-2026-11-23T12-34-09.md#L1453-L1483)
 
 **I decided:**
 
@@ -223,7 +223,7 @@ The documentation audit, source-only review package and chat-history index recor
 | Recognition denominators can hide failures | Saved experiments and original code establish the v1 gallery mismatch and the legacy rejection-field interpretation. | V2 gallery consistency, explicit reporting and independent Studio scoring. [Methodological correction](RESEARCH.md#correcting-the-open-set-cohort) | Verified method changes |
 | Technical depth and evidence separation were hard to follow | Owner relayed the documentation review's scope and recommendations. The complete critique was unavailable. | Separate product, research, architecture and collaboration narratives, with source-linked figures and a verification record. [Consistency report](docs/verification/DOCUMENTATION-CONSISTENCY.md) | Documentation review pending |
 
-The submitted Gallery capture shows the final state after enrollment, with 60 enrolled and zero pending. The interactive review evidence comes from a separate Chrome run that opened a non-first card, checked the three-item queue and confirmed recoverable handling of a stale preview. [Gallery capture](docs/screenshots/reference-gallery.png) ? [Browser verification](docs/verification/RELEASE.md#evaluation-studio-verification)
+The submitted Gallery capture shows the final state after enrollment, with 60 enrolled and zero pending. The interactive review evidence comes from a separate Chrome run that opened a non-first card, checked the three-item queue and confirmed recoverable handling of a stale preview. [Gallery capture](docs/screenshots/reference-gallery.png) · [Browser verification](docs/verification/RELEASE.md#evaluation-studio-verification)
 
 ## Authentic conversation evidence
 
@@ -233,9 +233,19 @@ These are three verbatim excerpts from the available project conversation, with 
 
 > Currently, FaceFind reports detected, recognized and unknown faces. These are inference outcomes, not verified correctness metrics.
 
-**Developer — Release instruction**
+**Open-set benchmark correction · November 23, 2026**
 
-> Do not introduce additional features, change model thresholds, download new models or repeat large benchmarks.
+**Codex, from the audit recommendation**
+
+> The smallest safe benchmark correction is to preflight gallery-reference images with the production detector, then form the known set from identities whose chosen reference yields exactly one usable face. If an identity has no suitable reference, replace it from a seeded reserve pool.
+
+**Developer, from the follow-up implementation instructions**
+
+> 5. Every known probe must belong to an identity actually represented in the gallery.
+> 6. Keep the 100 unknown identities completely disjoint from all known identities.
+> 7. Keep the existing production thresholds unchanged.
+
+[Original exchange](https://github.com/aksarwar8/FaceFind/blob/4309def70781bcb2d4eee29ce78b9352fae2be28/docs/ai_chats/codex/session-2026-11-23T12-34-09.md#L1453-L1483)
 
 **Codex verification report**
 

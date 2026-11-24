@@ -9,7 +9,7 @@
 - **Offline CPU inference** with experimentally compared detectors and recognizers. SCRFD-10G-KPS + AdaFace IR-18 is the preferred local research bundle when available. Bundled YuNet + SFace provides a smaller, independently usable fallback.
 - **Human-in-the-loop enrollment** with candidate crops, click-to-review pending cards, automatic queue advancement, and optional Smart selection with manual correction. SCRFD retries empty enrollment detections at a smaller input scale.
 - **Independent evaluation** through manual ground truth or CSV/JSON import. Evaluation Studio separates missed faces, false detections, rejected known faces, and incorrect assignments from successful outcomes.
-- **Measured demonstration** with a 60-identity gallery and five synthetic composites. SCRFD + AdaFace delivered **56/57 correct outcomes**, including **34/35** known identifications and **22/22** unknown rejections. The projected boxes are approximate, and the cohort does not establish general real-world accuracy. [Protocol and per-group results](RESEARCH.md#evaluation-studio-demonstration)
+- **Measured demonstration.** In the controlled synthetic run with a 60-identity gallery and five composites, **SCRFD + AdaFace** delivered **56/57 correct outcomes**, including **34/35** known identifications and **22/22** unknown rejections. The projected boxes are approximate, and the cohort does not establish general real-world accuracy. [Protocol and per-group results](RESEARCH.md#evaluation-studio-demonstration)
 - **Verified release** with 103 passing Python tests, four documented Python skips, and 14 passing JavaScript tests. A fresh public clone ran the bundled models and the normal recognition workflow in Chrome. [Release verification](docs/verification/RELEASE.md)
 
 The application release is [`9734b203f524670b695e85b0ea2088f4c6794517`](https://github.com/aksarwar8/FaceFind/commit/9734b203f524670b695e85b0ea2088f4c6794517). The latest guides and presentation are on [main](https://github.com/aksarwar8/FaceFind/tree/main). The checkout in Quick start pins the tested application revision.
@@ -55,7 +55,7 @@ Open [FaceFind on loopback](http://127.0.0.1:8000/). If the Windows launcher is 
 ## Application workflow
 
 1. In **Gallery**, select a folder or individual reference images. Put the intended identity in the filename stem. Aim for one clearly visible intended face per reference.
-2. Build the gallery. **Always Review Multiple Faces** queues every ambiguous reference. **Smart Auto-Selection** can pick a dominant face using detector evidence. Check the queued items and inspect any automatic choices you want to verify or correct.
+2. Build the gallery. For evaluator-supplied folders, choose **Always Review Multiple Faces** when enrollment accuracy takes priority over convenience. It queues every multi-face reference for review. **Smart Auto-Selection** remains available and can pick a dominant face using detector evidence. Check the queued items and inspect any automatic choices you want to verify or correct.
 3. In **Analyze**, choose a group photo and select **Analyze photo**. Inspect the numbered faces, assignments, Unknown outcomes, and processing errors. Download the recognition JPEG or CSV if needed.
 4. For a scored review, choose **Evaluate results** after analysis. Start manual review or supply independent annotations.
 
@@ -67,6 +67,8 @@ Open [FaceFind on loopback](http://127.0.0.1:8000/). If the Windows launcher is 
 | SCRFD-10G-KPS + AdaFace IR-18 | Preferred for local research when the optional runtime and separately supplied checkpoints are available | 512 |
 
 Switch pipelines in **Settings**. Galleries are cached separately because the two embedding spaces differ. SCRFD reference enrollment retries at 640 pixels after an empty 1,280-pixel pass. Group-photo inference uses the normal single pass. [Model setup and startup behavior](ARCHITECTURE.md#reproducibility) · [Checkpoint rights](models/face/MODEL_LICENSES.md)
+
+The bundled YuNet + SFace pipeline uses its existing deployed matching rules, including the confirmed and tentative branches. The research-calibrated SFace results measure performance only under those research settings. [Calibration and deployed rules](RESEARCH.md#calibration-and-deployed-rules)
 
 ### Optional preferred-pipeline setup
 
