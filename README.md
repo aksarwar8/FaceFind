@@ -1,48 +1,20 @@
-# FaceFind
+﻿# FaceFind
 
-**Local, open-set face identification for group photographs.** FaceFind enrolls a named reference gallery, detects faces in a group photo, and assigns a name only when the active matching rule accepts the result. Faces outside the gallery can remain **Unknown**. The desktop browser and CPU inference run on one workstation.
+**Offline Open-Set Face Identification for Group Photographs**
 
-[Quick start](#installation-and-first-run) · [Evaluation Studio](#evaluation-studio) · [Research report](RESEARCH.md) · [System design](ARCHITECTURE.md) · [AI collaboration](AI_COLLAB.md) · [Technical Presentation](docs/presentation/README.md)
+Built for Industry.AI Task A, *Who Is in the Photo?* Enroll a folder of named reference photos, then identify people in an unseen group photo on a local CPU. FaceFind shows accepted names and **Unknown** outcomes, with tentative matches where the active pipeline supports them. Evaluation Studio can independently score those predictions against ground truth.
 
-## At a glance
-
-- **Offline CPU inference** with experimentally compared detectors and recognizers. SCRFD-10G-KPS + AdaFace IR-18 is the preferred local research bundle when available. Bundled YuNet + SFace provides a smaller, independently usable fallback.
-- **Human-in-the-loop enrollment** with candidate crops, click-to-review pending cards, automatic queue advancement, and optional Smart selection with manual correction. SCRFD retries empty enrollment detections at a smaller input scale.
-- **Independent evaluation** through manual ground truth or CSV/JSON import. Evaluation Studio separates missed faces, false detections, rejected known faces, and incorrect assignments from successful outcomes.
-- **Measured demonstration.** In the controlled synthetic run with a 60-identity gallery and five composites, **SCRFD + AdaFace** delivered **56/57 correct outcomes**, including **34/35** known identifications and **22/22** unknown rejections. The projected boxes are approximate, and the cohort does not establish general real-world accuracy. [Protocol and per-group results](RESEARCH.md#evaluation-studio-demonstration)
-- **Verified release** with 103 passing Python tests, four documented Python skips, and 14 passing JavaScript tests. A fresh public clone ran the bundled models and the normal recognition workflow in Chrome. [Release verification](docs/verification/RELEASE.md)
-
-The application release is [`9734b203f524670b695e85b0ea2088f4c6794517`](https://github.com/aksarwar8/FaceFind/commit/9734b203f524670b695e85b0ea2088f4c6794517). The latest guides and presentation are on [main](https://github.com/aksarwar8/FaceFind/tree/main). The checkout in Quick start pins the tested application revision.
-
-## Application preview
-
-| Workspace | What you can inspect |
-|---|---|
-| Dashboard | Engine status, gallery readiness, and the latest analysis and evaluation |
-| Gallery | Reference enrollment, candidate crops and scores, and automatic selection corrections |
-| Analyze | Original and annotated group photo, face-by-face outcomes, and recognition exports |
-| Evaluation | Verified ground truth, matched faces and errors, outcome matrix, metrics, and separate exports |
-
-These browser captures show the running application. Opaque masks cover photographs and identity labels.
-
-| Dashboard | Reference Gallery |
-|---|---|
-| ![Dashboard with engine status and gallery count](docs/screenshots/dashboard.png) | ![Gallery Manager with enrollment totals and reference controls](docs/screenshots/reference-gallery.png) |
-
-| Group-photo recognition | Evaluation Studio |
-|---|---|
-| ![Analyze workspace showing ten detections and the recognition summary](docs/screenshots/group-photo-recognition.png) | ![Evaluation Studio showing the Easy composite's verified outcome summary and matrix](docs/screenshots/evaluation-studio.png) |
-
-The Analyze capture shows predictions. The Evaluation capture shows the Easy synthetic composite scored against imported annotations and is one of five groups in the controlled demonstration. [Screenshot evidence and privacy treatment](docs/screenshots/README.md)
+[Quick Start](#installation-and-first-run) · [Research](RESEARCH.md) · [Architecture](ARCHITECTURE.md) · [AI Collaboration](AI_COLLAB.md) · [Technical Presentation](docs/presentation/README.md)
 
 ## Installation and first run
 
-Install **Python 3.11**. This Windows PowerShell path uses the two bundled checkpoints and works without optional packages or model downloads. Internet access can be required to install packages the first time.
+Install **Git** and **Python 3.11**. The commands below use the YuNet and SFace checkpoints included in the repository. First-time package installation may require internet access. Face inference runs offline once installed.
+
+**Windows PowerShell**
 
 ~~~powershell
 git clone https://github.com/aksarwar8/FaceFind.git
 cd FaceFind
-git checkout 9734b203f524670b695e85b0ea2088f4c6794517
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
@@ -50,77 +22,106 @@ $env:FACEFIND_DEFAULT_PIPELINE = "yunet_sface"
 python -m uvicorn app:app --host 127.0.0.1 --port 8000
 ~~~
 
-Open [FaceFind on loopback](http://127.0.0.1:8000/). If the Windows launcher is unavailable, use the absolute path to Python 3.11 in the environment-creation command. If activation is blocked, invoke `.\.venv\Scripts\python.exe` directly. On macOS or Linux, use `python3.11 -m venv .venv`, `source .venv/bin/activate` and `export FACEFIND_DEFAULT_PIPELINE=yunet_sface`. Release verification is on Windows.
+Keep the terminal running and open [http://127.0.0.1:8000](http://127.0.0.1:8000/).
+
+The current `main` checkout has the same application, runtime dependencies, and bundled checkpoints as the verified release. To reproduce the exact tested revision, run `git checkout 9734b203f524670b695e85b0ea2088f4c6794517` after cloning and before installing. [Frozen release](https://github.com/aksarwar8/FaceFind/commit/9734b203f524670b695e85b0ea2088f4c6794517) · [Public-clone verification](docs/verification/RELEASE.md#public-clone-verification)
+
+<details>
+<summary>Troubleshooting and macOS/Linux commands</summary>
+
+| If | Do this |
+|---|---|
+| The `py` launcher is unavailable | Use the absolute path to your Python 3.11 executable to run `-m venv .venv`. |
+| PowerShell blocks activation | Skip activation. Use `.\.venv\Scripts\python.exe` in place of `python` for installation and startup. |
+| Optional research checkpoints are unavailable | Keep `FACEFIND_DEFAULT_PIPELINE=yunet_sface`. The bundled pipeline needs no optional packages or model downloads. |
+| The page fails to load | Start Uvicorn from the repository root, check the terminal for startup errors, then reload the loopback URL. |
+
+For macOS or Linux, create and enter the cloned checkout, then use:
+
+~~~bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+export FACEFIND_DEFAULT_PIPELINE=yunet_sface
+python -m uvicorn app:app --host 127.0.0.1 --port 8000
+~~~
+
+The recorded release checks used Windows.
+
+</details>
 
 ## Application workflow
 
-1. In **Gallery**, select a folder or individual reference images. Put the intended identity in the filename stem. Aim for one clearly visible intended face per reference.
-2. Build the gallery. For evaluator-supplied folders, choose **Always Review Multiple Faces** when enrollment accuracy takes priority over convenience. It queues every multi-face reference for review. **Smart Auto-Selection** remains available and can pick a dominant face using detector evidence. Check the queued items and inspect any automatic choices you want to verify or correct.
-3. In **Analyze**, choose a group photo and select **Analyze photo**. Inspect the numbered faces, assignments, Unknown outcomes, and processing errors. Download the recognition JPEG or CSV if needed.
-4. For a scored review, choose **Evaluate results** after analysis. Start manual review or supply independent annotations.
+1. Start FaceFind and open **Gallery**.
+2. Choose **Select reference folder**. For Task A, prepare about 50 named references. Use the intended identity as each filename stem and aim for one clearly visible intended face per image.
+3. For evaluator-supplied folders, select **Always Review Multiple Faces** in Settings when enrollment correctness takes priority. Choose **Build gallery**, then confirm the intended face or skip the reference. **Smart Auto-Selection** remains available as a convenience and its choices can be corrected.
+4. Open **Analyze**, upload the group photograph, and choose **Analyze photo**.
+5. Review the annotated photograph and per-face list. Choose **Download JPEG** or **Download CSV** to export recognition results.
+6. Optionally choose **Evaluate results** and supply independent annotations or review faces manually.
 
-## Recognition pipelines
+In a closed-set classifier, each input is assigned to a fixed set of classes. FaceFind compares faces against the current gallery and can withhold a confirmed name when a match is weak or ambiguous.
 
-| Bundle | Status | Face embedding |
-|---|---|---:|
-| YuNet + SFace | Bundled, lightweight, CPU, automatic fallback | 128 |
-| SCRFD-10G-KPS + AdaFace IR-18 | Preferred for local research when the optional runtime and separately supplied checkpoints are available | 512 |
+~~~mermaid
+flowchart LR
+    Gallery["Named reference gallery"] --> Infer["Local CPU inference"]
+    Photo["Group photograph"] --> Infer
+    Infer --> Results["Known / Unknown / tentative"]
+    Results --> Outputs["Annotated image and structured results"]
+    Outputs --> Eval["Optional independent evaluation"]
+    Truth["Ground truth"] --> Eval
+~~~
 
-Switch pipelines in **Settings**. Galleries are cached separately because the two embedding spaces differ. SCRFD reference enrollment retries at 640 pixels after an empty 1,280-pixel pass. Group-photo inference uses the normal single pass. [Model setup and startup behavior](ARCHITECTURE.md#reproducibility) · [Checkpoint rights](models/face/MODEL_LICENSES.md)
+## Application preview
 
-The bundled YuNet + SFace pipeline uses its existing deployed matching rules, including the confirmed and tentative branches. The research-calibrated SFace results measure performance only under those research settings. [Calibration and deployed rules](RESEARCH.md#calibration-and-deployed-rules)
+These are real application captures. Privacy masks cover photographs and identity labels.
 
-### Optional preferred-pipeline setup
+| Dashboard | Reference Gallery |
+|---|---|
+| ![Dashboard showing engine status and gallery readiness](docs/screenshots/dashboard.png) | ![Gallery Manager showing enrollment totals and reference controls](docs/screenshots/reference-gallery.png) |
+| Check engine readiness and gallery status. | Enroll named files and review ambiguous candidates. |
 
-The bundled quick start is sufficient for Task A. To enable SCRFD + AdaFace, install the combined optional runtime and supply local checkpoints under their applicable terms, then remove the bundled-pipeline environment override before restarting. [Exact optional setup, paths and pins](ARCHITECTURE.md#reproducibility) · [Model rights](models/face/MODEL_LICENSES.md)
+| Analyze | Evaluation Studio |
+|---|---|
+| ![Analyze workspace showing per-face recognition predictions](docs/screenshots/group-photo-recognition.png) | ![Evaluation Studio showing a scored synthetic composite](docs/screenshots/evaluation-studio.png) |
+| Inspect model predictions and export the recognition output. | Inspect outcomes scored against imported annotations on the Easy synthetic composite. |
+
+[System Settings](docs/screenshots/system-settings.png) shows the selected model bundle and CPU readiness. [Screenshot register](docs/screenshots/README.md)
+
+## Engineering highlights
+
+- **Two CPU pipelines.** Bundled **YuNet + SFace** provides an independent startup path and automatic fallback. **SCRFD-10G-KPS + AdaFace IR-18** is the preferred research configuration when its optional runtime and separately supplied checkpoints are available. Detector and recognizer comparisons informed the choice. The calibrated SFace research results apply only to those research settings. The bundled pipeline keeps its deployed rules. [Research and deployed rules](RESEARCH.md#calibration-and-deployed-rules) · [Optional setup and model rights](ARCHITECTURE.md#reproducibility)
+- **Adaptive enrollment.** SCRFD retries at 640 px after an empty 1,280 px reference pass. Group analysis keeps its single pass. The Gallery presents candidate previews and preserves operator control. [Diagnostics](RESEARCH.md#a-scrfd-missed-real-references)
+- **Local, bounded processing.** The browser calls a loopback FastAPI worker that validates images and runs detection, alignment, embedding and matching with a pipeline-specific in-memory gallery. Upload and decode limits bound processing. [Architecture](ARCHITECTURE.md) · [Archify HTML](docs/architecture/facefind.html) · [Editable specification](docs/architecture/facefind.architecture.json)
 
 ## Evaluation Studio
 
-The ordinary Analyze workflow needs no ground truth. Evaluation uses a frozen copy of the response plus the image hash, gallery revision, pipeline, and matching settings. Changing the analysis or its gallery invalidates the evaluation.
+Evaluation freezes the inference response in browser memory. It scores the predictions against separately supplied CSV/JSON ground truth or manual review. The report separates wrong identities, false acceptances, rejected known faces, missed faces and processing failures. [Input formats and scoring](ARCHITECTURE.md#evaluation-studio)
 
-Use manual review to label each detection and add missed faces by box, or import CSV/JSON annotations. Valid imported boxes use deterministic one-to-one matching at IoU ≥ 0.50. The outcome matrix and linked photo/list filters expose errors alongside successes. Conditional scores use matched, successfully processed faces. End-to-end scores include all annotated faces in the relevant class. Numerators and denominators are visible, and incomplete manual reviews are labeled **Verified subset**. The studio supports separate JSON, CSV and JPEG exports. [Input formats and metric definitions](ARCHITECTURE.md#evaluation-studio)
+### Controlled synthetic results
 
-## Research highlights
+**SCRFD + AdaFace** · **60 reference identities** · **Five synthetic composites** · **57 annotated faces**
 
-| Evidence cohort | Result |
-|---|---|
-| Same 500 WIDER FACE images, custom IoU ≥ 0.50 | SCRFD improved F1 from **.6716 to .7570** versus YuNet, with mean detector latency increasing from about **100 to 526 ms**. |
-| Shared recognition-only LFW cohort, 578 evaluated known probes | AdaFace and ArcFace each correctly accepted **576/578** known probes. ArcFace had fewer false unknown assignments on that cohort, while AdaFace used less CPU time per embedding. |
-| Same 17 local references investigated after user testing | The gallery-only SCRFD retry raised face-detection coverage from **14/17 to 17/17** at the same detector score threshold. |
-| One genuine group photo, five warm loopback requests per pipeline | Mean API latency was **0.55 s** with the bundled path and **1.26 s** with the preferred path. The photo had no identity annotations. |
+| Outcome | Correct / total |
+|---|---:|
+| Overall correct outcomes | **56/57 (98.25%)** |
+| Known faces correctly identified | **34/35 (97.14%)** |
+| Unknown faces correctly rejected | **22/22 (100%)** |
 
-The [research report](RESEARCH.md) separates these cohorts, explains why the original open-set split needed correction, and records the failures observed with dominant-face enrollment.
+The composites use approximate annotations. Four of the 60 gallery identities overlap with the earlier 50-way calibration gallery. These results describe this controlled cohort. They do not establish general real-world accuracy. [Protocol and per-group results](RESEARCH.md#evaluation-studio-demonstration)
 
 ## Reproducibility and boundaries
 
-**Offline acceptance.** The developer disconnected the laptop from the internet and confirmed that FaceFind started and worked locally. The redacted startup capture shows the local backend connected and SCRFD-10G-KPS + AdaFace IR-18 ready. [Offline screenshot](docs/screenshots/offline-demo.png) · [Verification scope](docs/verification/RELEASE.md#developer-performed-disconnected-network-acceptance)
+**Recorded release checks:** 103 Python tests passed, four documented Python skips, and 14 JavaScript tests passed. A clean public clone ran the bundled workflow in Chrome. The developer separately confirmed startup and local operation with the laptop disconnected. The offline screenshot records startup. [Release verification](docs/verification/RELEASE.md) · [Offline evidence](docs/verification/RELEASE.md#developer-performed-disconnected-network-acceptance)
 
-FastAPI serves the local browser frontend and owns the in-memory galleries and model bundles. Inference runs in the server process. Evaluation and report preparation run in the browser. [System design and Archify provenance](ARCHITECTURE.md)
+Use FaceFind on one local workstation. Worker restart clears enrollment, and browser reload clears unsaved evaluation. Exports remain on disk. [Local privacy and security](ARCHITECTURE.md#security-and-privacy) · [Model and dataset rights](models/face/MODEL_LICENSES.md)
 
-~~~powershell
-python -m pytest -q tests scripts/evaluation -rs
-node --experimental-default-type=module --test tests/*.mjs
-~~~
+## Technical presentation and documentation
 
-The complete Python suite uses the optional runtime. See [reproducibility](ARCHITECTURE.md#reproducibility) for its installation and [verification](docs/verification/RELEASE.md) for the tested setup and skip reasons.
+[Presentation PDF](docs/presentation/FaceFind_Technical_Presentation.pdf) · [Editable PowerPoint](docs/presentation/FaceFind_Technical_Presentation.pptx) · [Presentation guide](docs/presentation/README.md)
 
-The application is designed for one local workstation. Gallery and evaluation state reset on restart or page reload, respectively. Large uploads can spool to the operating system's temporary storage. Exported files remain on disk. Treat face images and annotations as sensitive. Optional model rights are restricted or unresolved, and deployment rights for models and datasets require separate review. [Privacy design](ARCHITECTURE.md#security-and-privacy) · [Model rights](models/face/MODEL_LICENSES.md)
-
-## Technical presentation
-
-The 11-slide interview deck includes a three-minute introduction and an appendix on experiments, evaluation and reproducibility. [PDF](docs/presentation/FaceFind_Technical_Presentation.pdf) · [Editable PowerPoint](docs/presentation/FaceFind_Technical_Presentation.pptx) · [Presentation guide](docs/presentation/README.md)
-
-## Documentation map
-
-| Document | Use it to find |
+| Document | What it covers |
 |---|---|
-| Technical Presentation ([PDF](docs/presentation/FaceFind_Technical_Presentation.pdf) · [PowerPoint](docs/presentation/FaceFind_Technical_Presentation.pptx)) | Interview walkthrough and technical appendix |
-| [Research](RESEARCH.md) | Cohorts, scientific reasoning, comparative figures and negative results |
-| [Architecture](ARCHITECTURE.md) | State, inference and evaluation, API contracts, security, and Archify provenance |
-| [AI collaboration](AI_COLLAB.md) | Human decisions, AI contributions, original excerpts, and review outcomes |
-| [Evidence index](docs/research/EVIDENCE.md) | Run provenance and sanitized aggregates |
-| [Compliance matrix](docs/verification/COMPLIANCE.md) | Verified assignment scope and outstanding evidence |
-| [Release verification](docs/verification/RELEASE.md) | Clean-clone startup, browser checks, tests and disconnected-network acceptance |
-| [Model rights](models/face/MODEL_LICENSES.md) | Checkpoint terms, provenance and bundled notices |
-| [Archify artifact](docs/architecture/facefind.html) | Generated system architecture |
-| [Application screenshots](docs/screenshots/README.md) | Approved captures and evidence scope |
+| [Research](RESEARCH.md) · [Evidence index](docs/research/EVIDENCE.md) | Detector and recognizer comparisons, calibration, diagnostics and controlled cohorts |
+| [Architecture](ARCHITECTURE.md) | Model lifecycle, gallery state, API, security and system trade-offs |
+| [AI Collaboration](AI_COLLAB.md) · [Conversation archive](docs/ai_chats/README.md) | Developer decisions, AI contributions, authentic excerpts and history coverage |
+| [Assignment compliance](docs/verification/COMPLIANCE.md) | Task A requirements, verification scope and outstanding evidence |
