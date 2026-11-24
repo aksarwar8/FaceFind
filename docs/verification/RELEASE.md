@@ -1,6 +1,6 @@
 # FaceFind release verification
 
-**Run date** November 24, 2026 · Windows x64 · Python 3.11.9 · Node 22.17.1 · local CPU inference. This is a release candidate for review. The [compliance matrix](COMPLIANCE.md) distinguishes verified workflow requirements from missing submission evidence.
+**Run date** November 24, 2026 · Windows x64 · Python 3.11.9 · Node 22.17.1 · local CPU inference. The application release is [`9734b203f524670b695e85b0ea2088f4c6794517`](https://github.com/aksarwar8/FaceFind/commit/9734b203f524670b695e85b0ea2088f4c6794517). The numbered baseline and hardening checks below are historical. The [compliance matrix](COMPLIANCE.md) distinguishes verified workflow requirements from missing submission evidence.
 
 ## Baseline release-candidate audit and fixes
 
@@ -64,7 +64,7 @@ The authorized browser host was unavailable during the baseline run. Later targe
 
 ## Outstanding issues
 
-- **P0** — The original assignment brief and complete, reviewed AI collaboration history are outstanding. Obtain the brief, reconcile the matrix, and supply authentic sanitized exports to satisfy the known history requirement.
+- **P0** — Complete original AI histories remain outstanding under the recovered brief. Supply authentic exports or accessible share links from the first project prompt. [History index](../ai_chats/README.md)
 - **P1** — Complete the manual browser and publishable screenshot pass above. The full desktop walkthrough and publishable screenshots remain outstanding. Targeted Gallery and Evaluation checks are recorded below.
 - **P1** — The Smart heuristic can choose the wrong person when the intended face is smaller. Use strict review or verify each automatic choice before a consequential demo.
 - **P2** — Test optional HEIC/HEIF decoding and shaped Indic labels on an RAQM-enabled installation and collect representative annotated real-photo evidence if future use requires broader coverage. Research weight rights remain restricted or unresolved and the bundled evaluator path is independent of them.
@@ -100,9 +100,15 @@ Archify 3.3.0 regenerated the diagram from the updated specification. Validate, 
 | Bundled-only HTTP | Requested SCRFD + AdaFace and automatically started YuNet + SFace. Enrolled six identities after one manual confirmation. Group analysis returned an annotated JPEG with one assigned identity and 12 Unknown. A failed switch preserved the current gallery. |
 | Preferred HTTP | Started SCRFD + AdaFace. Enrolled 52 identities with nine manual confirms. There were two automatic selections. Strict review and automatic correction passed. Two concurrent requests for the same pending ID produced one enrollment and one HTTP 409. Both pipelines restored their own cache after switching. Repeated group analysis reused embeddings and returned eight assigned identities and six Unknown. These counts are model outputs on an unannotated photograph. |
 | Privacy and offline boundary | Live API checked no-store on thumbnails, interactive and automatic review previews, group previews and annotated responses. Python DNS and TCP were guarded in the isolated server processes, with no external attempts during replay. This does not cover native-code networking or replace a disconnected browser demonstration. |
-| Remaining manual evidence | Review the Windows browser workflow and publishable screenshots, run shaped Indic label rendering on an RAQM-enabled installation, and supply the original assignment brief and authentic sanitized AI collaboration history. |
+| Remaining manual evidence | Review the Windows browser workflow and publishable screenshots, run shaped Indic label rendering on an RAQM-enabled installation, and supply the complete authentic AI collaboration history. |
 
-## Published bundled-model baseline
+## Public clone verification
+
+### Evaluation Studio release
+
+A fresh GitHub clone matched `9734b203f524670b695e85b0ea2088f4c6794517` and contained 91 tracked files. A separate Windows Python 3.11.9 runtime used the verified base packages only. It requested SCRFD + AdaFace and automatically fell back to bundled YuNet + SFace. Local Chrome enrolled five references from six uploads, analyzed a group image without ground truth, received an annotated JPEG and showed **Not Evaluated** when opening Evaluation Studio. The application returned 13 Unknown detections and zero processing errors. These are inference outcomes for the smoke fixture. All five evaluation modules were served locally, with no external browser requests or page errors recorded.
+
+### Earlier bundled-model baseline
 
 Public commit `2cdcc1fcacceb1abea083baf59ec1ccb2af5f078` was freshly cloned from GitHub. In an isolated Windows Python 3.11.9 runtime containing only the base requirements, explicit YuNet + SFace startup and automatic fallback both passed. Six references enrolled after one manual confirmation, and a group upload produced a decoded annotated JPEG without ground truth.
 
@@ -112,6 +118,6 @@ The Evaluation workspace was exercised in local Chrome with SCRFD + AdaFace, the
 
 Archify 3.3.0 regenerated the architecture with the independent browser-side evaluation path. Validation, delivery, checks and the Archify browser gate passed. [Sanitized demo outcomes](../../RESEARCH.md#evaluation-studio-demonstration).
 
-The current candidate keeps the existing recognition workflow usable without ground truth. Chrome also verified that three multi-face references were queued in Always Review mode, that a non-first card could be reviewed, and that a stale preview returned a recoverable HTTP 409.
+The published application keeps the existing recognition workflow usable without ground truth. Chrome also verified that three multi-face references were queued in Always Review mode, that a non-first card could be reviewed, and that a stale preview returned a recoverable HTTP 409.
 
 The final suites returned 103 Python passes and four existing skips (two Windows directory-symlink checks and two Indic shaping checks), plus 14 JavaScript passes. A separate Chrome replay of the captured analysis verified the imported file SHA-256, boxless roster pairing, the incomplete-review guard and invalidation on a gallery revision change without a new inference run.

@@ -140,6 +140,15 @@
           "median_ms": 1159.647299995413,
           "p95_ms": 1226.0104199929629,
           "max_ms": 1239.3042999901809
+        },
+        "mean_timing_breakdown_ms": {
+          "face_detection": 405.05917998962104,
+          "face_alignment": 15.077119990019128,
+          "face_embedding": 505.42244001990184,
+          "identity_matching": 3.29214000958018,
+          "annotation_and_rendering": 96.0634600080084,
+          "unaccounted_backend": 127.03565998235717,
+          "api_minus_backend": 105.48849999322556
         }
       },
       "yunet_sface": {
@@ -163,6 +172,15 @@
           "median_ms": 451.8648999801371,
           "p95_ms": 501.8729199829977,
           "max_ms": 505.31719997525215
+        },
+        "mean_timing_breakdown_ms": {
+          "face_detection": 64.99872000422329,
+          "face_alignment": 5.228340020403266,
+          "face_embedding": 181.7428199807182,
+          "identity_matching": 2.357580012176186,
+          "annotation_and_rendering": 105.80130000016652,
+          "unaccounted_backend": 102.47077997773886,
+          "api_minus_backend": 90.11192001053132
         }
       }
     }
@@ -226,5 +244,140 @@
       "errors": 0
     },
     "identity_accuracy_assessed": false
+  },
+  "recognition_only_lfw": {
+    "gallery": 200,
+    "known_probes": 756,
+    "unknown_probes": 557,
+    "models": {
+      "SFace": {
+        "embedding_latency_ms": {
+          "mean_ms": 23.209374902516547,
+          "median_ms": 22.47949999582488,
+          "p95_ms": 31.12484499433776,
+          "count": 1020
+        },
+        "bytes": 38696353,
+        "correct_known": 558,
+        "known_evaluated": 578,
+        "unknown_evaluated": 442,
+        "false_acceptances": 11,
+        "true_unknown_rejections": 431
+      },
+      "ArcFace": {
+        "embedding_latency_ms": {
+          "mean_ms": 789.1833998037185,
+          "median_ms": 789.0746000048239,
+          "p95_ms": 903.4294799945201,
+          "count": 1020
+        },
+        "bytes": 260665334,
+        "correct_known": 576,
+        "known_evaluated": 578,
+        "unknown_evaluated": 442,
+        "false_acceptances": 0,
+        "true_unknown_rejections": 442
+      },
+      "AdaFace": {
+        "embedding_latency_ms": {
+          "mean_ms": 55.64036323456664,
+          "median_ms": 54.769850001321174,
+          "p95_ms": 65.59261500515277,
+          "count": 1020
+        },
+        "bytes": 96105345,
+        "correct_known": 576,
+        "known_evaluated": 578,
+        "unknown_evaluated": 442,
+        "false_acceptances": 10,
+        "true_unknown_rejections": 432
+      }
+    }
+  },
+  "combined_pipeline_composites": {
+    "images": 10,
+    "annotated_faces": 100,
+    "systems": {
+      "YuNet + SFace": {
+        "tp": 91,
+        "fp": 2,
+        "fn": 9,
+        "detection_precision": 0.978494623655914,
+        "detection_recall": 0.91,
+        "detection_f1": 0.9430051813471503,
+        "group_processing_latency": {
+          "count": 10,
+          "mean_ms": 653.3144399960293,
+          "median_ms": 647.7248500013957,
+          "p95_ms": 850.2243050126706
+        }
+      },
+      "SCRFD-10G-KPS + AdaFace IR-18": {
+        "tp": 98,
+        "fp": 4,
+        "fn": 2,
+        "detection_precision": 0.9607843137254902,
+        "detection_recall": 0.98,
+        "detection_f1": 0.9702970297029702,
+        "group_processing_latency": {
+          "count": 10,
+          "mean_ms": 1678.5279899952002,
+          "median_ms": 1640.3025500039803,
+          "p95_ms": 2589.327559991215
+        }
+      }
+    }
+  },
+  "evaluation_studio_demo": {
+    "application_release": "9734b203f524670b695e85b0ea2088f4c6794517",
+    "gallery": 60,
+    "images": 5,
+    "actual_known": 35,
+    "actual_unknown": 22,
+    "counts": {
+      "correct_known": 34,
+      "wrong_known": 0,
+      "rejected_known": 1,
+      "correct_unknown": 22,
+      "false_accept": 0,
+      "missed_known": 0,
+      "missed_unknown": 0,
+      "processing_failure": 0,
+      "false_detection": 0,
+      "unverified": 0
+    },
+    "outcome_matrix": [
+      [
+        34,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        null,
+        0,
+        22,
+        0,
+        0
+      ]
+    ],
+    "detection": {
+      "tp": 57,
+      "fp": 0,
+      "fn": 0
+    },
+    "gallery_50_calibration_overlap": {
+      "gallery": 4,
+      "known_probes": 2,
+      "unknown_probes": 3
+    },
+    "full_combined_calibration_overlap": {
+      "gallery": 10,
+      "known_probes": 7,
+      "unknown_probes": 4
+    },
+    "approximate_boxes": true,
+    "synthetic": true
   }
 }

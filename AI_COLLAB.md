@@ -1,69 +1,250 @@
-# AI collaboration and engineering decisions
+# Human-directed AI engineering in FaceFind
 
-The project owner directed an offline open-set identification demo, chose what to evaluate and set the final submission requirements. AI assistance supported implementation, experiment design, debugging and documentation. The record distinguishes a decision visible in the project conversation from a conclusion reconstructed from source and saved experiments.
+[Roles](#roles-and-evidence) · [Workflow](#collaboration-workflow) · [Timeline](#engineering-timeline) · [Nine decisions](#nine-principal-decisions) · [Review register](#independent-review-register) · [Original excerpts](#authentic-conversation-evidence) · [Remaining evidence](#full-history-evidence-still-needed)
 
-Codex's work is directly supported by the current project conversation, source, tests and verification reports. The owner reports using ChatGPT for earlier project discussion and Claude for an independent ZIP-based review and a documentation blueprint. The available source ZIP is consistent with a review snapshot, but the original Claude and ChatGPT conversations and the blueprint text were not located. Historical assistant wording and individual recommendations are therefore left unattributed unless directly observed.
+## Roles and evidence
 
-## Decision record
+The developer directed the product and its operating constraints, challenged model choices with local observations, defined the browser experience, requested review and authorized publication. AI assistance was substantial. It implemented and tested the software, built experiments, investigated failures and helped turn measured evidence into decisions.
 
-| Decision | Context and AI input | Owner direction and reasoning | Outcome and supporting evidence |
+| Participant | Role and evidence |
+|---|---|
+| Human developer | Set the offline CPU goal, required genuine evidence and model-rights boundaries, decided which pipeline to retain, surfaced real enrollment and browser failures, and required independent correctness metrics. The project conversation records these directions. |
+| ChatGPT | The owner reports earlier research guidance, technical reasoning, experiment interpretation, architecture planning, implementation specifications and review synthesis. The original early ChatGPT records were unavailable for individual attribution. |
+| Codex | Inspected source and artifacts, implemented the application and tests, executed controlled comparisons and diagnostics, verified integration and browser behavior, built genuine Archify output, and performed release and clone checks. Source, saved results and project exchanges support this work. |
+| Claude | The owner reports independent critique of startup, methodology, model rights and documentation, plus a documentation review limited to four main documents. The review snapshot corroborates what could have been reviewed. The full review and original conversations were unavailable for quotation or line-by-line verification. |
+
+## Collaboration workflow
+
+~~~mermaid
+flowchart LR
+    H[Human observes a limitation] --> Q[Define a testable question with AI]
+    Q --> T[Implement or run a controlled test]
+    T --> E[Record measured evidence and failures]
+    E --> R[Review scope, denominators and reproducibility]
+    R --> D[Human directs the next decision]
+    D --> H
+~~~
+
+The detector investigation shows this loop. The benchmark favored SCRFD, but a real gallery exposed misses. Codex isolated scale from thresholding and NMS. The developer directed a gallery-only retry at the demonstrated scale while preserving model behavior elsewhere. The changed application then needed its own verification. [Scale investigation](RESEARCH.md#a-scrfd-missed-real-references)
+
+## Engineering timeline
+
+This chronology is reconstructed from the checked Git history, run identifiers and the available project exchanges. The order is thematic where individual experiment timestamps or original conversations are unavailable.
+
+| Phase | Human direction or review | Engineering evidence |
+|---|---|---|
+| Requirements and baseline | Specify a local face-gallery and group-photo workflow on CPU. | Initial application commits on November 21–23, 2026, with the modular YuNet + SFace baseline. |
+| Detector investigation | Compare on common inputs and retain partial runs truthfully. | WIDER FACE checked comparisons and the preserved shared YOLO prefix. |
+| Recognition and calibration | Evaluate alternatives for accurate known recognition and unknown rejection under CPU constraints. | LFW comparisons, per-model calibration and recognition cost. |
+| Methodological repair | Require consistent ground truth and explicit denominators. | V2 preflights references before considering an identity known. The original source of the diagnosis is unverified. |
+| Preferred pipeline and desktop design | Keep SCRFD + AdaFace as the preferred research bundle and require a usable offline browser application. | Model adapters, fallback, versioned galleries and desktop workflows. |
+| Independent review and hardening | Request external critique, then require reproducible startup, rights clarity and defensive local behavior. | Review concerns recorded in the owner brief; verified code, dependency and regression changes. |
+| Real-world diagnostics | Challenge missed reference faces and an implausible second candidate. | Controlled scale experiment and a brick-wall false-positive investigation. |
+| Human-in-the-loop enrollment | Reduce review effort while preserving user intent and correction. | Smart and strict policies, smaller-target stress failures and immutable review IDs. |
+| Actual browser testing | Report that visible pending cards could not be selected directly. | Browser reproduced 57 enrolled and three pending. Pending cards were static. The patch added click-through, automatic advancement and recovery after a stale preview. |
+| Evaluation Studio | Ask how to prove that a recognized or unknown face was correctly classified. | Independent annotation, deterministic matching, outcome matrix and report exports. |
+| Release and documentation | Authorize publication, then require fresh-clone verification and a documentation-only refinement. | Public application baseline and targeted Chrome release evidence. [Release verification](docs/verification/RELEASE.md) |
+
+## Nine principal decisions
+
+The first-person fields below summarize documented owner directions. The AI fields describe verified proposals or implementation responses. Direct quotations appear in the excerpt groups.
+
+### 1. Preserve a runnable bundled pipeline
+
+**AI suggested:**
+
+The independent-review concern reported by the owner was that optional checkpoints could obstruct startup. Codex documented a two-bundle fallback and verification approach.
+
+**I decided:**
+
+Keep SCRFD + AdaFace preferred for the authorized research demo and retain YuNet + SFace as an independently runnable bundled option.
+
+**Why:**
+
+The research bundle improved measured outcomes on particular cohorts. The evaluator also needed a usable checkout without restricted weights or optional dependencies.
+
+**Evidence:**
+
+A clean public clone started the bundled pipeline and analyzed a photo. [Release verification](docs/verification/RELEASE.md) · [Model decision](RESEARCH.md#multi-objective-decision)
+
+### 2. Score known probes only against a valid gallery
+
+**AI suggested:**
+
+The AI-assisted v2 evaluation implements enrollment preflight and checks consistency between the actual gallery and the known probe set. The original source of the diagnosis is unverified.
+
+**I decided:**
+
+Keep the original and corrected experiments separate and use the corrected cohort for interpretable known-person results.
+
+**Why:**
+
+In v1, only 146 of 200 selected identities enrolled. A known probe without its corresponding gallery identity could never succeed, and the repaired cohort changed composition.
+
+**Evidence:**
+
+The v2 report had 200 enrolled identities and 756 known probes. [Methodological correction](RESEARCH.md#correcting-the-open-set-cohort)
+
+### 3. Investigate the three SCRFD misses at controlled scales
+
+**AI suggested:**
+
+Codex proposed a 640-pixel gallery-only SCRFD pass after the standard pass found zero faces.
+
+**I decided:**
+
+Keep the detector and existing score threshold. Use the smaller pass only for empty gallery detections.
+
+**Why:**
+
+A real reference folder exposed misses despite the detector's benchmark advantage. The scale control recovered those faces while leaving the primary path intact.
+
+**Evidence:**
+
+Coverage rose from 14/17 to 17/17. [Scale investigation](RESEARCH.md#a-scrfd-missed-real-references)
+
+### 4. Keep human control over ambiguous enrollment
+
+**AI suggested:**
+
+Codex implemented a dominant-face heuristic alongside strict review, exposed candidate crops and scores, and retained correction for automatic selections.
+
+**I decided:**
+
+Offer Smart selection for a lower-effort demo and keep strict review and correction available.
+
+**Why:**
+
+A false second candidate on a brick recess showed that detector output alone could not establish whom the uploader intended to enroll.
+
+**Evidence:**
+
+Smart reduced original reviews from three to one, but all three automatic choices in the designated smaller-target stress cases were wrong. [False-positive investigation](RESEARCH.md#b-brick-wall-false-positive) · [Smart validation](RESEARCH.md#c-smart-auto-selection-and-intent)
+
+### 5. Reproduce pending-card behavior in the actual browser
+
+**AI suggested:**
+
+Codex traced working immutable-ID requests and identified the static pending cards. It implemented click-through, queue advancement and stale-preview recovery.
+
+**I decided:**
+
+Require every pending card to open directly and keep immutable IDs and a refresh path after stale requests.
+
+**Why:**
+
+A valid preview endpoint still left the workflow incomplete when the person testing the UI could not open a non-first item.
+
+**Evidence:**
+
+Chrome reproduced 57 enrolled and three pending. Direct review, queue advancement and a separate two-session HTTP 409 recovery passed. The reported empty preview on a valid ID was not reproduced. [Browser verification](docs/verification/RELEASE.md#evaluation-studio-verification)
+
+### 6. Apply reviewed hardening without changing recognition rules
+
+**AI suggested:**
+
+Codex checked the upload-advisory version ranges and implemented bounded upload handling, immutable reference IDs and local Unicode labels with a numbered fallback.
+
+**I decided:**
+
+Require the security and correctness fixes while preserving model weights, matching behavior and calibration.
+
+**Why:**
+
+A stale selection or ambiguous exported label can undermine a local demonstration independently of model quality. Upload handling also needs explicit limits and cleanup.
+
+**Evidence:**
+
+The release checks cover same-stem replacement, concurrent pending actions, temporary-file cleanup, spool responsiveness and annotation fallback. [Hardening verification](docs/verification/RELEASE.md#final-hardening-verification)
+
+### 7. Evaluate correctness with independent ground truth
+
+**AI suggested:**
+
+Codex separated scoring from inference and implemented deterministic one-to-one box matching, an outcome matrix and separate conditional and end-to-end metrics.
+
+**I decided:**
+
+Add Evaluation Studio as an optional step after recognition, using manual labels or CSV/JSON annotations and frozen predictions.
+
+**Why:**
+
+Recognized and Unknown counts describe predictions. They cannot establish whether an assignment is correct, a known face was rejected, or a face was missed.
+
+**Evidence:**
+
+Chrome verified the independent evaluation flow. Five synthetic composites with approximate annotations yielded 56/57 correct outcomes, including one known rejection. [Measured outcomes](RESEARCH.md#evaluation-studio-demonstration) · [Evaluation design](ARCHITECTURE.md#evaluation-studio)
+
+### 8. Verify the evaluator experience from a public clone
+
+**AI suggested:**
+
+Codex used a clean clone of the published commit and an isolated base runtime to check startup, enrollment, inference and access to Evaluation Studio.
+
+**I decided:**
+
+Require a genuine public-clone smoke test with only bundled models, and leave the ordinary Analyze workflow usable without ground truth.
+
+**Why:**
+
+Development-only packages, weights and files could hide problems that an evaluator would encounter.
+
+**Evidence:**
+
+The clone matched the application commit, used YuNet + SFace, returned an annotated JPEG and opened the evaluation workspace as Not Evaluated. [Public clone verification](docs/verification/RELEASE.md#public-clone-verification)
+
+### 9. Make publication traceable without sharing private evidence
+
+**AI suggested:**
+
+Codex separated publication files from private artifacts and generated quantitative figures from sanitized aggregate inputs.
+
+**I decided:**
+
+Publish the frozen application and its evidence-linked documentation. Preserve original chat meaning and disclose gaps in the submission history.
+
+**Why:**
+
+The evaluator needs reproducible evidence, while credentials, biometric inputs, unreviewed transcripts and restricted checkpoints need to stay private.
+
+**Evidence:**
+
+The documentation audit, source-only review package and chat-history index record the verification scope and remaining gaps. [Consistency report](docs/verification/DOCUMENTATION-CONSISTENCY.md) · [History index](docs/ai_chats/README.md)
+
+## Independent review register
+
+| Finding or concern | Source and verification | Resolution and evidence | Status |
 |---|---|---|---|
-| 1. Local browser architecture | The earlier app needed local inference and a usable group-photo workflow. The initial framework discussion is unavailable. | The owner explicitly required FastAPI and modular vanilla JavaScript, with no frontend build stack during the desktop milestone. That supported a local, inspectable deployment. | Codex refined the persistent shell and workspaces. [Architecture](ARCHITECTURE.md). A specific Streamlit recommendation could not be verified. |
-| 2. Dataset evidence and scope | Detection and recognition require different labels and denominators. The later owner brief called for cautious dataset and licensing attribution. | Keep engineering decisions tied to the experiments actually run and limit the public record to aggregate results. | WIDER FACE supports box evaluation and LFW supports identity experiments. No original record establishes the reported SoloFace2 circularity assessment or use of volunteer or Wikimedia images. [Research](RESEARCH.md#7-dataset-and-rights-decisions). |
-| 3. Resolution and size sensitivity | A local scaling utility shows that resize behavior was investigated. The exact assistant recommendation and historical image output were unavailable. | Preserve verified geometry and distinguish an observed association from a causal claim. | The current detector downsizes large frames and restores coordinates. The saved comparison quantifies recall by face size. The original before/after image counts remain open. [Detector](face_engine/detector.py), [research](RESEARCH.md#resolution-sensitivity). |
-| 4. Duplicate identities | Codex added a post-match conflict pass, documented in the earlier collaboration record. Independently matched faces can compete for one enrolled identity. | Preserve duplicate protection and do not publish private identities or the unreproducible example. | Highest-score retention, deterministic tie-breaking, and model-specific demotion have synthetic regressions. [Conflict tests](tests/test_pipeline_conflicts.py). |
-| 5. Detector choice and experiment scope | The documented evidence includes YuNet, SCRFD, RetinaFace, and a separate partial YOLO comparison. Individual historical AI recommendations are unavailable. | Use saved evidence, distinguish cohorts and preserve the interrupted run without rerunning expensive work for documentation. | SCRFD yielded stronger recall and F1 on the completed three-way sample. The YOLO comparison uses only the shared 1,500 images. [Detector results](RESEARCH.md#2-detector-experiments). |
-| 6. Repair the open-set cohort | An early run evaluated known probes for identities absent from the built gallery. The artifact records the defect. The origin of the first diagnosis is not independently attributable. | The final brief requires the invalid cohort and corrected methodology to remain visible. | Version 2 preflighted references, used reserves and checked enrolled/probe consistency. Counts changed, so the reports are kept separate. [Open-set discussion](RESEARCH.md#pair-verification-and-corrected-open-set-identification). |
-| 7. Select a CPU recognizer | The recognition comparison evaluated three models using shared YuNet detections. The original recommendation transcript is unavailable. | The owner chose AdaFace for the preferred research pipeline and retained SFace for fallback. CPU cost and model size mattered alongside accuracy. | AdaFace matched ArcFace's correct known acceptance on the fixed cohort at lower CPU cost. The threshold deployed later came from the independently calibrated combined run. [Recognition evidence](RESEARCH.md#3-recognition-investigation). |
-| 8. Integrate SCRFD geometry | The runtime has explicit stride padding and a regression test. The historical console trace is absent. | Preserve the preferred detector and verify original-coordinate handling. | Aspect-preserving resize, bottom/right padding, and inverse coordinate scaling are in the adapter. [Implementation](face_engine/research_models.py), [regression](tests/test_research_models.py). |
-| 9. Respond to the independent review | The owner reports that Claude raised fresh-clone startup, rights, documentation and reproducibility issues and recommended reconsidering the default. The review response itself is unavailable. | The owner explicitly directed that the preferred research pipeline remain SCRFD + AdaFace, with graceful fallback addressing startup reliability. | Startup tries the alternate bundle and reports failure reasons. A failed interactive switch preserves the active state. [Configuration](face_engine/configuration.py), [verification](docs/verification/MILESTONES.md). |
-| 10. Use one Python environment and verify recovery | Codex observed a broken interpreter path and used a temporary official Python 3.11 runtime with the checkout's installed packages. The dependency record separated the declared OpenCV package name from the usable `cv2` provider. | The owner required reproducible setup and autonomous functional testing within execution permissions. | The combined pins and documented InsightFace installation preserve one OpenCV installation. Tests and isolated HTTP exercises covered failed enrollment, switching and cache restoration. [Setup](README.md#installation-and-first-run). |
-| 11. Define the desktop product | Codex mapped existing browser actions and API fields before implementing Dashboard, Gallery, Analyze and Settings. | The owner specified the workspaces, desktop target sizes, truthful live statistics, local exports and pipeline choice. The later request constrained changes to visual refinement. | The shared state and local modules retain analytics provenance, gallery/thumb revisions and analysis invalidation. Browser access failed, so verification relies on HTTP and regression checks. [Verification](docs/verification/MILESTONES.md). |
-| 12. Satisfy the artifact and evidence requirements | The assignment calls for genuine Archify output and traceable collaboration. Codex located saved experiments and used the official renderer. | The owner required authentic excerpts only, a private claim inventory, no raw biometric data and no commit or push. | The generated diagram and sanitized summaries are present. Original ChatGPT/Claude exports remain outstanding. [Architecture](ARCHITECTURE.md), [evidence](docs/research/EVIDENCE.md). |
-| 13. Investigate the SCRFD gallery misses | The owner observed that YuNet ultimately enrolled all 17 references while SCRFD rejected three, and asked Codex to trace the exact failures. The controlled runs reproduced the difference and recovered all three faces at a smaller scale with the same SCRFD threshold. | The owner specified a gallery-only retry at 640 pixels after an empty primary pass, preserving the selected detector and existing matching thresholds. | The retry maps boxes and landmarks back to the working image for AdaFace. The additional validation uses separate photos and controls. [Research](RESEARCH.md#reference-enrollment-scale-sensitivity), [architecture](ARCHITECTURE.md#enrollment). |
-| 14. Inspect the extra candidate | The owner noticed a reference with one visible face that triggered manual review. Codex inspected both production crops and located the second detection on a brick recess. | Keep SCRFD and the existing thresholds, and make manual review easier to inspect. | Candidate crops, raw detector scores, zoom, and synchronized numbered overlays expose the evidence before confirmation. [Architecture](ARCHITECTURE.md#enrollment). |
-| 15. Reduce demo review while retaining control | The owner requested simpler dominant-face selection for the demonstration, as recorded in the release instructions. Saved validation shows that the heuristic picked the larger person in three cases where the intended target was the smaller person. | Keep strict review selectable and let the user inspect or replace an automatic choice. | Smart selection reduced required reviews from three to one in the 17-reference folder. A correction replaces the vector and advances the revision. The smaller-target failures remain documented. [Research](RESEARCH.md#smart-reference-auto-selection). |
+| Missing optional weights threaten the startup path | Owner-reported independent review; fresh-clone behavior checked directly. | Automatic fallback preserves both choices. The public clone ran without optional checkpoints. [Release verification](docs/verification/RELEASE.md) | Verified resolution |
+| Checkpoint terms and training provenance need separate treatment | Owner-reported review concern checked against the retained rights register and published distribution. | Bundled notices retained and restricted or unresolved weights excluded. [Rights register](models/face/MODEL_LICENSES.md) | Rights uncertainty remains |
+| Vulnerable upload dependencies and blocking spool rollover | Owner hardening brief; advisories and known version ranges were checked during hardening. | Updated pins, bounded parsing and a responsiveness regression. [Advisory evidence](docs/verification/RELEASE.md#final-hardening-verification) | Verified for recorded versions |
+| Queue position can identify a different photo after replacement | Owner relayed a reproduced review finding; regression exercised same-stem replacement and concurrent requests. | Immutable review IDs, stale 409, queue refresh and separate embedding revision. [Lifecycle tests](tests/test_gallery_api_lifecycle.py) | Verified resolution |
+| Unicode labels could look identical | Owner relayed a reproduced review finding; the current tests exercised local rendering and numbered fallback. | Local Pillow rendering with structured Unicode identity retained. Indic shaping needs a compatible build. [Annotation tests](tests/test_annotations.py) | Verified fallback |
+| Recognition denominators can hide failures | Saved experiments and original code establish the v1 gallery mismatch and the legacy rejection-field interpretation. | V2 gallery consistency, explicit reporting and independent Studio scoring. [Methodological correction](RESEARCH.md#correcting-the-open-set-cohort) | Verified method changes |
+| Technical depth and evidence separation were hard to follow | Owner relayed the documentation review's scope and recommendations. The complete critique was unavailable. | Separate product, research, architecture and collaboration narratives, with source-linked figures and a verification record. [Consistency report](docs/verification/DOCUMENTATION-CONSISTENCY.md) | Documentation review pending |
 
-## Verbatim excerpts from the available Codex conversation
+## Authentic conversation evidence
 
-The following are complete individual sentences from the conversation available in this workspace session. Surrounding message text is omitted. Milestone labels identify the source exchange; no share URL or export identifier was available.
+These are three verbatim excerpts from the available project conversation, with speaker and context identified. They are selected statements with surrounding context omitted. They are not a reconstructed transcript or an external assistant attribution.
 
-**Codex, Milestone 3 verification.** Connects to decisions 9–11.
+**Developer — Evaluation Studio request**
 
-> User: “If browser automation remains unavailable, perform HTTP-level integration tests and provide a precise manual UI checklist.”
+> Currently, FaceFind reports detected, recognized and unknown faces. These are inference outcomes, not verified correctness metrics.
 
-> Codex: “The browser host is still unavailable. I found an existing local 50-reference fixture and will use it against an isolated FastAPI instance to verify enrollment, analysis, and pipeline cache restoration.”
+**Developer — Release instruction**
 
-**Codex, Milestone 4 kickoff.** Connects to decisions 9 and 12.
+> Do not introduce additional features, change model thresholds, download new models or repeat large benchmarks.
 
-> User: “Do not revert the preferred pipeline to YuNet + SFace merely because an earlier review suggested doing so.”
+**Codex verification report**
 
-> Codex: “I’ll also read the official Archify instructions and check what the tool processes before running it.”
+> The results apply to five synthetic composites with approximate boxes. They do not establish accuracy on genuine group photographs.
 
-These are excerpts from the active conversation. They do not constitute a full export or independent evidence of the original Claude review.
-
-**Codex, adaptive reference-enrollment follow-up.** Connects to decision 13.
-
-> User: “Do not assume that SCRFD is inherently superior because of the WIDER FACE benchmark.”
-
-> Codex: “Try a gallery-only SCRFD pass at 640 pixels when the standard pass returns zero faces.”
+The retained original exchanges document the desired outcomes, the browser-reported failure, the controlled evaluation and the publication authorization. There is no original exported record with which to quote Claude or the earlier ChatGPT conversations. [Evidence gaps](docs/verification/MISSING-EVIDENCE.md)
 
 ## Full-history evidence still needed
 
-- TODO — Supply the original Claude review of the FaceFind ZIP and the follow-up blueprint, ideally with date or original conversation identifier.
-- TODO — Supply the original ChatGPT research and architecture conversation, including any framework or dataset trade-offs and the cited SoloFace2 dataset-card revision.
-- TODO — Export the Codex milestone conversation if the assignment requires the full history. The current excerpts provide only selected decisions.
-
-No complete conversation export was found in the repository, inspected review archive, or checked project-related artifact locations. Keep originals private and review a separate submission copy for credentials, personal contact information, filesystem paths, biometrics, identities and unrelated content. The archive is not a substitute for review commentary.
+The recovered assignment brief requires the full project-related AI history from the first prompt. The excerpts above establish three selected exchanges. Complete ChatGPT, Codex and Claude coverage still needs authentic exports or accessible share links. [History index](docs/ai_chats/README.md)
 
 ## Reflection
 
-The owner set the problem, selected the development and comparison scope, directed the final pipeline choice and set the standard for evidence and privacy. Codex handled source analysis, implementation and verification within that scope. The clearest value of the experiments was exposing denominator errors and measuring model trade-offs before choosing a demo default. The reported independent review drew attention to the startup experience. Fallback and status reporting addressed that concern while preserving the intended research configuration. The incomplete browser and conversation evidence marks where human follow-through is still needed.
-
-## Final independent review follow-up
-
-The human-directed hardening request identified three concrete release issues: affected upload dependencies, stale review actions that could target a different photo with the same identity stem, and distinct Unicode names that could render identically. The implementation updates the upload stack against published advisories, separates review-item identity from embedding revision, and uses local font rendering with an explicit face-number fallback. The verification report records the regressions and the clean-install checks. The original review conversation export still needs to be supplied and sanitized as described above. [Release verification](docs/verification/RELEASE.md).
-
-## Why Evaluation Studio was added
-
-During manual testing, the developer directed that FaceFind distinguish inference counts from correctness. The question was how many predictions were actually correct when recognized and unrecognized totals alone could not answer it. The implementation keeps prediction generation independent and asks the evaluator to supply manual ground truth or import external annotations. It records the gallery and analysis version, identifies uncertainty and partial reviews, and reports measured outcomes with their denominators. The original request in the project conversation supports the decision. No model or threshold was changed for the demo.
+AI assistance accelerated implementation, experimental tooling and regression coverage. It also made verification essential. The initial known-probe denominator exposed how a plausible benchmark could answer the wrong question. Independent review brought attention to startup and engineering risks. The developer's manual observations exposed scale sensitivity, a false candidate and an interaction problem that the tests had missed. Evaluation Studio follows the same principle. A prediction becomes a verified outcome only when compared to ground truth with a clear protocol and denominator.
